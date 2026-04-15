@@ -2,8 +2,8 @@
 ## Download and run the project:
 1. Clone the repository:
    ```
-    git clone https://github.com/szybec31/Move_Multi-Label-Classification.git
-    cd Move_Multi-Label-Classification
+    git clone https://github.com/szybec31/Movie_Multi-Label-Classification.git
+    cd Movie_Multi-Label-Classification
    ```
 2. Create a virtual environment:
     ```
