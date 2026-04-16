@@ -3,3 +3,5 @@ myvenv/
 __pycache__
 .env
 .ipynb_checkpoints/
+.venv/
+movies/
