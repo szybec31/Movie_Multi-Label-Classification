@@ -27,16 +27,20 @@ y_label = lt.y_labels
 y_count = lt.y_count
 
 print(20*"=")
-print("text")
-run_model("tfidf", df, y, y_label, "text")
+print("text balanced 0.5")
+run_model("tfidf", df, y, y_label, ["text", 0.5, True])
 
 print(20*"=")
-print("title")
-run_model("tfidf", df, y, y_label, "title")
+print("text imbalanced 0.2")
+run_model("tfidf", df, y, y_label, ["text", 0.2, False])
 
-print(20*"=")
-print("overview")
-run_model("tfidf", df, y, y_label, "overview")
+# print(20*"=")
+# print("title")
+# run_model("tfidf", df, y, y_label, "title")
+
+# print(20*"=")
+# print("overview")
+# run_model("tfidf", df, y, y_label, "overview")
 
 exit()
 
