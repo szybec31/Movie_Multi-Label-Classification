@@ -11,7 +11,10 @@ df = pd.read_csv("movies.csv")
 os.makedirs("movies/posters", exist_ok=True)
 
 #Download posters for the first 20 records of the movies.csv file
-for i, row in df.head(10).iterrows():
+START = 0
+END = 50
+
+for i, row in df.iloc[START:END].iterrows():
     movie_name = row["title"]
     try:
         # Search for a movie
