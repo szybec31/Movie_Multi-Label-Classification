@@ -9,3 +9,5 @@ datasets
 torch
 requests
 dotenv
+PyQt5
+pyinstaller
