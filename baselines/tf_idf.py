@@ -1,12 +1,10 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.metrics import f1_score, classification_report, recall_score
-from sklearn.metrics import hamming_loss
 
 from sklearn.model_selection import train_test_split
 
-def model(df, y, y_label, type, threshold = 0.5, balanced = True):
+def model(df, y, type, threshold = 0.5, balanced = True):
     
     X = df[type]
 
@@ -29,12 +27,4 @@ def model(df, y, y_label, type, threshold = 0.5, balanced = True):
     y_proba = model.predict_proba(X_test_tfidf)
     y_pred = (y_proba > threshold).astype(int)
 
-    print("F1 micro:", f1_score(y_test, y_pred, average='micro'))
-    print("F1 macro:", f1_score(y_test, y_pred, average='macro'))
-    print("Recall weighted:", recall_score(y_test, y_pred, average='weighted'))
-
-    print("Avg labels per sample (true):", y_test.sum(axis=1).mean())
-    print("Avg labels per sample (pred):", y_pred.sum(axis=1).mean())
-    print("Hamming Loss:", hamming_loss(y_test, y_pred))
-
-    #print(classification_report(y_test, y_pred, target_names=y_label, zero_division=0))
+    return y_test, y_pred

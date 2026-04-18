@@ -3,7 +3,7 @@ from EDA import TextEDA
 from label_transform import LabelTransform
 import numpy as np
 from add_posters import attach_posters
-from baselines.run_model import run_model
+from baselines.run_model import run_model, save_model_info
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
@@ -26,13 +26,17 @@ y = lt.preprocessing()
 y_label = lt.y_labels
 y_count = lt.y_count
 
-print(20*"=")
-print("text balanced 0.5")
-run_model("tfidf", df, y, y_label, ["text", 0.5, True])
+for type in ["text", "title", "overview"]:
+    for tr in [0.5, 0.3, 0.2]:
+        for b in [True, False]:
+            print(20*"=")
+            print(f"{type} {tr} {b}")
+            y_t, y_p = run_model("tfidf", df, y, [type, tr, b])
+            save_model_info("test", f"tfidf_{type}_{tr}_{b}.txt", y_t, y_p, y_label)
 
-print(20*"=")
-print("text imbalanced 0.2")
-run_model("tfidf", df, y, y_label, ["text", 0.2, False])
+# print(20*"=")
+# print("text imbalanced 0.2")
+# run_model("tfidf", df, y, ["text", 0.2, False])
 
 # print(20*"=")
 # print("title")
