@@ -46,6 +46,11 @@ class TextEDA:
         print("max overview:", self.df['overview_words'].max())
         print("avg overview:", round(self.df['overview_words'].mean(),3))
 
+        print("\n--- PLAKATY ---")
+        print("Ile filmów ma poster:", self.df["poster_path"].notnull().sum())
+        coverage = self.df["poster_path"].notnull().mean()
+        print("Pokrycie obrazów:", coverage)
+
         print(50 * "==")
 
         if y_labels is not None and y_count is not None:

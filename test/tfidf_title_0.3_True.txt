@@ -1,0 +1,34 @@
+F1 micro: 0.3727839003354097
+F1 macro: 0.29653216377359654
+Recall weighted: 0.8844563869367508
+Avg labels per sample (true): 2.5557316428948758
+Avg labels per sample (pred): 9.571579503433703
+Hamming Loss: 0.42258026647884017
+
+Classification report:
+
+                 precision    recall  f1-score   support
+
+         Action       0.26      0.96      0.41       423
+      Adventure       0.17      0.90      0.28       270
+      Animation       0.22      0.77      0.34       155
+         Comedy       0.38      0.97      0.55       682
+          Crime       0.16      0.88      0.28       268
+          Drama       0.48      0.98      0.64       855
+         Family       0.16      0.84      0.27       191
+        Fantasy       0.15      0.84      0.26       211
+        History       0.11      0.29      0.15        93
+         Horror       0.19      0.89      0.32       273
+          Music       0.08      0.21      0.12        61
+        Mystery       0.12      0.76      0.20       169
+        Romance       0.19      0.88      0.32       327
+Science Fiction       0.17      0.88      0.29       227
+       TV Movie       0.09      0.43      0.15        23
+       Thriller       0.31      0.96      0.46       527
+            War       0.07      0.26      0.11        53
+        Western       0.14      0.33      0.19        30
+
+      micro avg       0.24      0.88      0.37      4838
+      macro avg       0.19      0.72      0.30      4838
+   weighted avg       0.27      0.88      0.41      4838
+    samples avg       0.25      0.90      0.38      4838
