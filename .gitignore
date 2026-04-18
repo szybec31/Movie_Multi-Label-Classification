@@ -5,3 +5,6 @@ __pycache__
 .ipynb_checkpoints/
 .venv/
 movies/
+app/run.spec
+app/build/
+app/dist/
