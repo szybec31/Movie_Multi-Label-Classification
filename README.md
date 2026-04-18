@@ -15,4 +15,10 @@
    ```
    pip install -r requirements.txt
    ```
+
+## Build ready app: (dist folder)
+   ```
+   cd app
+   pyinstaller --noconsole --onedir --icon=assets/icon.ico --add-data "assets;assets" --add-data "models;models" run.py
+   ```
 ## Authors:
