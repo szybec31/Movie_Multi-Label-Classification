@@ -15,6 +15,8 @@ df, status = attach_posters(df)
 if status:
     df.to_csv('movies.csv', index=False)
 
+exit()
+
 # EDA - podstawowe informacje, usunięcie null
 eda = TextEDA(df)
 # eda.display_dataset_basic_info()

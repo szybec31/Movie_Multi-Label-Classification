@@ -5,7 +5,7 @@ def make_safe_title(title):
     title = re.sub(r'[<>:"/\\|?*]', '', title)
     return title.replace(" ", "_")
 
-def attach_posters(df, poster_dir="movies\posters"):
+def attach_posters(df, poster_dir="movies\\posters"):
     poster_files = set(os.listdir(poster_dir))
     status = False
     paths = []
