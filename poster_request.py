@@ -13,8 +13,8 @@ os.makedirs("movies/posters", exist_ok=True)
 
 #Download posters for the first 20 records of the movies.csv file
 DELTA = 150
-START = 800
-END = 1000
+START = 2500
+END = 3000
 
 for i, row in tqdm(df.iloc[START:END].iterrows(), total=END-START):
     movie_name = row["title"]
