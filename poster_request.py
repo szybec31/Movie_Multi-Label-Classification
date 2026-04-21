@@ -3,6 +3,7 @@ import requests
 import os
 import re
 from dotenv import load_dotenv
+from tqdm import tqdm 
 load_dotenv()
 
 API_KEY = os.getenv("TMDB_API_KEY")
@@ -11,10 +12,11 @@ df = pd.read_csv("movies.csv")
 os.makedirs("movies/posters", exist_ok=True)
 
 #Download posters for the first 20 records of the movies.csv file
-START = 0
-END = 50
+DELTA = 150
+START = 2500
+END = 3000
 
-for i, row in df.iloc[START:END].iterrows():
+for i, row in tqdm(df.iloc[START:END].iterrows(), total=END-START):
     movie_name = row["title"]
     try:
         # Search for a movie
@@ -46,7 +48,7 @@ for i, row in df.iloc[START:END].iterrows():
         with open(file_name, "wb") as f:
             f.write(img_data)
 
-        print(f"Saved: {file_name}")
+        print(f"\nSaved: {file_name}")
 
     except Exception as e:
         print(f"Error for {movie_name}: {e}")

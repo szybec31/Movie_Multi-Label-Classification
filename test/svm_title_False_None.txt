@@ -1,0 +1,7 @@
+{'input': 'title', 'threshold': None, 'balanced': False, 'vectorizer': 'tfidf', 'model': 'svm'}
+f1_micro: 0.4244 ± 0.0082
+f1_macro: 0.3369 ± 0.0118
+recall: 0.3313 ± 0.0076
+hamming: 0.1303 ± 0.0016
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 1.4648 ± 0.0200

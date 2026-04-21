@@ -3,7 +3,9 @@ from EDA import TextEDA
 from label_transform import LabelTransform
 import numpy as np
 from add_posters import attach_posters
-from baselines.run_model import run_model, save_model_info
+from baselines.run_experiment import run_experiment
+from baselines.run_cv import run_cv
+from baselines.utils.save_model import save_model_info
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
@@ -11,9 +13,11 @@ pd.set_option('display.max_rows', 20)
 
 # Wczytanie danych
 df = pd.read_csv("movies.csv")
-df, status = attach_posters(df)
-if status:
-    df.to_csv('movies.csv', index=False)
+# df, status = attach_posters(df)
+# if status:
+#     df.to_csv('movies.csv', index=False)
+
+# exit()
 
 # EDA - podstawowe informacje, usunięcie null
 eda = TextEDA(df)
@@ -26,25 +30,34 @@ y = lt.preprocessing()
 y_label = lt.y_labels
 y_count = lt.y_count
 
-for type in ["text", "title", "overview"]:
-    for tr in [0.5, 0.3, 0.2]:
-        for b in [True, False]:
-            print(20*"=")
-            print(f"{type} {tr} {b}")
-            y_t, y_p = run_model("tfidf", df, y, [type, tr, b])
-            save_model_info("test", f"tfidf_{type}_{tr}_{b}.txt", y_t, y_p, y_label)
+for model_type in ["logistic", "svm"]:
+    for type in ["text", "title", "overview"]:
 
-# print(20*"=")
-# print("text imbalanced 0.2")
-# run_model("tfidf", df, y, ["text", 0.2, False])
+        balances = [True, False]
+        
+        if model_type == "logistic":
+            thresholds = [0.5, 0.3, 0.2]
+        else:
+            thresholds = [None]
 
-# print(20*"=")
-# print("title")
-# run_model("tfidf", df, y, y_label, "title")
+        for tr in thresholds:
+            for b in balances:
 
-# print(20*"=")
-# print("overview")
-# run_model("tfidf", df, y, y_label, "overview")
+                config = {
+                    "input": type,
+                    "threshold": tr,
+                    "balanced": b,
+                    "vectorizer": "tfidf",
+                    "model": model_type
+                }
+
+                avg, std = run_cv(df, y, config)
+
+                print(config)
+                for k in avg:
+                    print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+
+                save_model_info(config, avg, std, "test")
 
 exit()
 

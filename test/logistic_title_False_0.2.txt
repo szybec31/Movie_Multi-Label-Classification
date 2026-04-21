@@ -1,0 +1,7 @@
+{'input': 'title', 'threshold': 0.2, 'balanced': False, 'vectorizer': 'tfidf', 'model': 'logistic'}
+f1_micro: 0.4876 ± 0.0046
+f1_macro: 0.3163 ± 0.0069
+recall: 0.6368 ± 0.0074
+hamming: 0.1940 ± 0.0019
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 4.2069 ± 0.0366
