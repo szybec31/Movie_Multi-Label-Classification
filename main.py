@@ -3,7 +3,8 @@ from EDA import TextEDA
 from label_transform import LabelTransform
 import numpy as np
 from add_posters import attach_posters
-from baselines.run_model import run_model, save_model_info
+from baselines.run_experiment import run_experiment
+from baselines.run_cv import run_cv
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
@@ -11,11 +12,11 @@ pd.set_option('display.max_rows', 20)
 
 # Wczytanie danych
 df = pd.read_csv("movies.csv")
-df, status = attach_posters(df)
-if status:
-    df.to_csv('movies.csv', index=False)
+# df, status = attach_posters(df)
+# if status:
+#     df.to_csv('movies.csv', index=False)
 
-exit()
+# exit()
 
 # EDA - podstawowe informacje, usunięcie null
 eda = TextEDA(df)
@@ -33,8 +34,24 @@ for type in ["text", "title", "overview"]:
         for b in [True, False]:
             print(20*"=")
             print(f"{type} {tr} {b}")
-            y_t, y_p = run_model("tfidf", df, y, [type, tr, b])
-            save_model_info("test", f"tfidf_{type}_{tr}_{b}.txt", y_t, y_p, y_label)
+            config = {
+                "input": type,
+                "threshold": tr,
+                "balanced": b,
+                "vectorizer": "tfidf",
+                "model": "logistic"
+            }
+
+            # single run
+            # res = run_experiment(df, y, config)
+            # print("Single run:", res)
+
+            # cross-validation
+            avg, std = run_cv(df, y, config)
+
+            print("\nCV results:")
+            for k in avg:
+                print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
 
 # print(20*"=")
 # print("text imbalanced 0.2")
