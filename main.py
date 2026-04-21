@@ -29,29 +29,32 @@ y = lt.preprocessing()
 y_label = lt.y_labels
 y_count = lt.y_count
 
-for type in ["text", "title", "overview"]:
-    for tr in [0.5, 0.3, 0.2]:
-        for b in [True, False]:
-            print(20*"=")
-            print(f"{type} {tr} {b}")
-            config = {
-                "input": type,
-                "threshold": tr,
-                "balanced": b,
-                "vectorizer": "tfidf",
-                "model": "logistic"
-            }
+for model_type in ["logistic", "svm"]:
+    for type in ["text", "title", "overview"]:
 
-            # single run
-            # res = run_experiment(df, y, config)
-            # print("Single run:", res)
+        balances = [True, False]
+        
+        if model_type == "logistic":
+            thresholds = [0.5]
+        else:
+            thresholds = [None]
 
-            # cross-validation
-            avg, std = run_cv(df, y, config)
+        for tr in thresholds:
+            for b in balances:
 
-            print("\nCV results:")
-            for k in avg:
-                print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+                config = {
+                    "input": type,
+                    "threshold": tr,
+                    "balanced": b,
+                    "vectorizer": "tfidf",
+                    "model": model_type
+                }
+
+                avg, std = run_cv(df, y, config)
+
+                print(config)
+                for k in avg:
+                    print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
 
 # print(20*"=")
 # print("text imbalanced 0.2")

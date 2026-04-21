@@ -22,12 +22,23 @@ def run_experiment(df, y, config, split=None):
     X_train, X_test, _ = build_tfidf(X_train, X_test)
 
     # model
-    from .models.logistic import train_logistic
-    model = train_logistic(X_train, y_train, config["balanced"])
+    # model selection
+
+    if config["model"] == "logistic":
+        from .models.logistic import train_logistic
+        model = train_logistic(X_train, y_train, config["balanced"])
+
+    elif config["model"] == "svm":
+        from .models.svm import train_svm
+        model = train_svm(X_train, y_train, config["balanced"])
 
     # predict
-    y_proba = model.predict_proba(X_test)
-    y_pred = (y_proba > config["threshold"]).astype(int)
+    if config["model"] == "logistic":
+        y_proba = model.predict_proba(X_test)
+        y_pred = (y_proba > config["threshold"]).astype(int)
+
+    elif config["model"] == "svm":
+        y_pred = model.predict(X_test)
 
     # metrics
     from .utils.metrics import evaluate
