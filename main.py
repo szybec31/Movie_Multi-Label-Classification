@@ -5,6 +5,7 @@ import numpy as np
 from add_posters import attach_posters
 from baselines.run_experiment import run_experiment
 from baselines.run_cv import run_cv
+from baselines.utils.save_model import save_model_info
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
@@ -35,7 +36,7 @@ for model_type in ["logistic", "svm"]:
         balances = [True, False]
         
         if model_type == "logistic":
-            thresholds = [0.5]
+            thresholds = [0.5, 0.3, 0.2]
         else:
             thresholds = [None]
 
@@ -56,17 +57,7 @@ for model_type in ["logistic", "svm"]:
                 for k in avg:
                     print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
 
-# print(20*"=")
-# print("text imbalanced 0.2")
-# run_model("tfidf", df, y, ["text", 0.2, False])
-
-# print(20*"=")
-# print("title")
-# run_model("tfidf", df, y, y_label, "title")
-
-# print(20*"=")
-# print("overview")
-# run_model("tfidf", df, y, y_label, "overview")
+                save_model_info(config, avg, std, "test")
 
 exit()
 
