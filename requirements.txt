@@ -11,3 +11,6 @@ requests
 dotenv
 PyQt5
 pyinstaller
+torch
+torchvision 
+pillow

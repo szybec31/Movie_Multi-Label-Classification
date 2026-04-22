@@ -5,11 +5,24 @@ def run_cv(df, y, config, n_splits=5):
     from sklearn.model_selection import StratifiedKFold
     import numpy as np
 
-    # input
-    if config["input"] == "text":
-        X = df["title"].fillna('') + " " + df["overview"].fillna('')
+    # ========================
+    # TYPE ("text" or "graphics" or "early-fusion" or "late-fusion")
+    # ========================
+    if config["type"] == "graphics":
+        X = df["poster_path"]
+
+
+    elif config["type"] == "text":
+        # ========================
+        # SUBTYPE (for text only)
+        # ========================
+        if config["subtype"] == "text":
+            X = df["title"].fillna('') + " " + df["overview"].fillna('')
+        else:
+            X = df[config["subtype"]]
+
     else:
-        X = df[config["input"]]
+        raise ValueError("Unknown type")
 
     # pseudo-stratyfikacja (ważne!)
     y_strat = y.sum(axis=1)

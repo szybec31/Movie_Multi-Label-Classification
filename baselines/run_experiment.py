@@ -1,12 +1,27 @@
 def run_experiment(df, y, config, split=None):
+    # ========================
+    # TYPE ("text" or "graphics" or "early-fusion" or "late-fusion")
+    # ========================
+    if config["type"] == "graphics":
+        X = df["poster_path"]
 
-    # input
-    if config["input"] == "text":
-        X = df["title"].fillna('') + " " + df["overview"].fillna('')
+
+    elif config["type"] == "text":
+        # ========================
+        # SUBTYPE (for text only)
+        # ========================
+        if config["subtype"] == "text":
+            X = df["title"].fillna('') + " " + df["overview"].fillna('')
+        else:
+            X = df[config["subtype"]]
+
     else:
-        X = df[config["input"]]
+        raise ValueError("Unknown type")
 
-    # split (jeśli nie podany → default)
+
+    # ========================
+    # SPLIT
+    # ========================
     if split is None:
         from sklearn.model_selection import train_test_split
         X_train, X_test, y_train, y_test = train_test_split(
@@ -17,13 +32,22 @@ def run_experiment(df, y, config, split=None):
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
 
-    # features
-    from .features.tfidf import build_tfidf
-    X_train, X_test, _ = build_tfidf(X_train, X_test)
 
-    # model
-    # model selection
+    # ========================
+    # FEATURES
+    # ========================
+    if config["type"] == "text":
+        from .features.tfidf import build_tfidf
+        X_train, X_test, _ = build_tfidf(X_train, X_test)
 
+    elif config["type"] == "graphics":
+        from .features.resnet import build_image_features
+        X_train, X_test, _ = build_image_features(df, split)
+
+
+    # ========================
+    # MODEL
+    # ========================
     if config["model"] == "logistic":
         from .models.logistic import train_logistic
         model = train_logistic(X_train, y_train, config["balanced"])
@@ -32,7 +56,9 @@ def run_experiment(df, y, config, split=None):
         from .models.svm import train_svm
         model = train_svm(X_train, y_train, config["balanced"])
 
-    # predict
+    # ========================
+    # PREDICT
+    # ========================
     if config["model"] == "logistic":
         y_proba = model.predict_proba(X_test)
         y_pred = (y_proba > config["threshold"]).astype(int)
@@ -40,7 +66,9 @@ def run_experiment(df, y, config, split=None):
     elif config["model"] == "svm":
         y_pred = model.predict(X_test)
 
-    # metrics
+    # ========================
+    # METRICS
+    # ========================
     from .utils.metrics import evaluate
     results = evaluate(y_test, y_pred)
 
