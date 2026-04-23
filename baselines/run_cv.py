@@ -1,15 +1,9 @@
 from .run_experiment import run_experiment
+from sklearn.model_selection import StratifiedKFold
+import numpy as np
 
 def run_cv(df, y, config, n_splits=5):
-
-    from sklearn.model_selection import StratifiedKFold
-    import numpy as np
-
-    # input
-    if config["input"] == "text":
-        X = df["title"].fillna('') + " " + df["overview"].fillna('')
-    else:
-        X = df[config["input"]]
+    X = df["title"] # nie ma znaczenia kolumna, gdyz StratifiedKFold.split zwraca i tak tylko id's
 
     # pseudo-stratyfikacja (ważne!)
     y_strat = y.sum(axis=1)

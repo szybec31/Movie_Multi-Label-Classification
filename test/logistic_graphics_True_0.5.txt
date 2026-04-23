@@ -1,0 +1,7 @@
+{'type': 'graphics', 'subtype': 'graphics', 'threshold': 0.5, 'balanced': True, 'vectorizer': 'resnet', 'model': 'logistic'}
+f1_micro: 0.4479 ± 0.0063
+f1_macro: 0.3619 ± 0.0044
+recall: 0.6449 ± 0.0114
+hamming: 0.2306 ± 0.0026
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 4.9073 ± 0.0520

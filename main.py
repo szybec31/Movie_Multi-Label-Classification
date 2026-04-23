@@ -2,7 +2,6 @@ import pandas as pd
 from EDA import TextEDA
 from label_transform import LabelTransform
 import numpy as np
-from add_posters import attach_posters
 from baselines.run_experiment import run_experiment
 from baselines.run_cv import run_cv
 from baselines.utils.save_model import save_model_info
@@ -13,11 +12,6 @@ pd.set_option('display.max_rows', 20)
 
 # Wczytanie danych
 df = pd.read_csv("movies.csv")
-# df, status = attach_posters(df)
-# if status:
-#     df.to_csv('movies.csv', index=False)
-
-# exit()
 
 # EDA - podstawowe informacje, usunięcie null
 eda = TextEDA(df)
@@ -30,8 +24,23 @@ y = lt.preprocessing()
 y_label = lt.y_labels
 y_count = lt.y_count
 
-for model_type in ["logistic", "svm"]:
-    for type in ["text", "title", "overview"]:
+'''
+    config = {
+        "type": "graphics", # text or graphics; soon also early-fusion and late-fusion
+        "subtype": "graphics", # for text: text or title or overview
+        "threshold": 0.5, # Number for logistic or None for svm
+        "balanced": False, # True or False
+        "vectorizer": "resnet18", # tfidf, bert, resnet18, resnet50
+        "model": "logistic" # logistic, svm, rf, bert
+    }
+
+    avg, std = run_cv(df, y, config)
+
+    exit()
+'''
+
+for model_type in ["logistic"]: # , "svm"
+    for subtype in ["graphics"]: # "text", "title", "overview"
 
         balances = [True, False]
         
@@ -44,10 +53,11 @@ for model_type in ["logistic", "svm"]:
             for b in balances:
 
                 config = {
-                    "input": type,
+                    "type": "graphics", # text or graphics; soon also early-fusion and late-fusion
+                    "subtype": subtype,
                     "threshold": tr,
                     "balanced": b,
-                    "vectorizer": "tfidf",
+                    "vectorizer": "resnet50",
                     "model": model_type
                 }
 
