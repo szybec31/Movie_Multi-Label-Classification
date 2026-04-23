@@ -39,7 +39,7 @@ y_count = lt.y_count
     exit()
 '''
 
-for model_type in ["logistic", "svm"]:
+for model_type in ["logistic"]: # , "svm"
     for subtype in ["graphics"]: # "text", "title", "overview"
 
         balances = [True, False]
