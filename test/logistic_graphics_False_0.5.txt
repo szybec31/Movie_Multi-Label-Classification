@@ -1,7 +1,7 @@
 {'type': 'graphics', 'subtype': 'graphics', 'threshold': 0.5, 'balanced': False, 'vectorizer': 'resnet', 'model': 'logistic'}
-f1_micro: 0.2899 ± 0.0061
-f1_macro: 0.2095 ± 0.0045
-recall: 0.2056 ± 0.0047
-hamming: 0.1460 ± 0.0016
+f1_micro: 0.4488 ± 0.0087
+f1_macro: 0.3053 ± 0.0037
+recall: 0.3726 ± 0.0068
+hamming: 0.1327 ± 0.0023
 avg_labels_true: 2.6105 ± 0.0018
-avg_labels_pred: 1.0918 ± 0.0247
+avg_labels_pred: 1.7242 ± 0.0130

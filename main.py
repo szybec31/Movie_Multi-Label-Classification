@@ -30,8 +30,8 @@ y_count = lt.y_count
         "subtype": "graphics", # for text: text or title or overview
         "threshold": 0.5, # Number for logistic or None for svm
         "balanced": False, # True or False
-        "vectorizer": "resnet", # tfidf or resnet // for info only
-        "model": "logistic" # logistic or svm
+        "vectorizer": "resnet18", # tfidf, bert, resnet18, resnet50
+        "model": "logistic" # logistic, svm, rf, bert
     }
 
     avg, std = run_cv(df, y, config)
@@ -57,7 +57,7 @@ for model_type in ["logistic", "svm"]:
                     "subtype": subtype,
                     "threshold": tr,
                     "balanced": b,
-                    "vectorizer": "resnet",
+                    "vectorizer": "resnet50",
                     "model": model_type
                 }
 

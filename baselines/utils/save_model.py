@@ -2,7 +2,7 @@ import os
 
 def save_model_info(config, avg, std, dir_name):
     os.makedirs(dir_name, exist_ok=True)
-    file_path = os.path.join(dir_name, f"{config['model']}_{config['subtype']}_{config['balanced']}_{config['threshold']}.txt")
+    file_path = os.path.join(dir_name, f"{config['model']}_{config['subtype']}_{config['vectorizer']}_{config['balanced']}_{config['threshold']}.txt")
 
     output = []
     output.append(str(config))

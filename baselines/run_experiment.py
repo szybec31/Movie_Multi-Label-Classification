@@ -4,9 +4,15 @@ def run_experiment(df, y, config, split=None):
     # ========================
     if config["type"] == "graphics":
         X = df["poster_path"]
+        if config["vectorizer"] not in ["resnet18", "resnet50"]:
+            raise ValueError("Wrong vectorizer to chosen type")
+            config["vectorizer"] = "resnet18"
 
 
     elif config["type"] == "text":
+        if config["vectorizer"] not in ["tfidf", "bert"]:
+            raise ValueError("Wrong vectorizer to chosen type")
+            config["vectorizer"] = "tfidf"
         # ========================
         # SUBTYPE (for text only)
         # ========================
@@ -17,6 +23,7 @@ def run_experiment(df, y, config, split=None):
 
     else:
         raise ValueError("Unknown type")
+    
 
 
     # ========================
@@ -34,15 +41,22 @@ def run_experiment(df, y, config, split=None):
 
 
     # ========================
-    # FEATURES
+    # FEATURES / VECTORIZER
     # ========================
-    if config["type"] == "text":
+    if config["vectorizer"] == "tfidf":
         from .features.tfidf import build_tfidf
         X_train, X_test, _ = build_tfidf(X_train, X_test)
 
-    elif config["type"] == "graphics":
-        from .features.resnet import build_image_features
+    elif config["vectorizer"] == "resnet18":
+        from .features.resnet18 import build_image_features
         X_train, X_test, _ = build_image_features(df, split)
+    
+    elif config["vectorizer"] == "resnet50":
+        from .features.resnet50 import build_image_features
+        X_train, X_test, _ = build_image_features(df, split)
+
+    else:
+        raise ValueError("Unknown vectorizer")
 
 
     # ========================
@@ -55,6 +69,9 @@ def run_experiment(df, y, config, split=None):
     elif config["model"] == "svm":
         from .models.svm import train_svm
         model = train_svm(X_train, y_train, config["balanced"])
+    
+    else:
+        raise ValueError("Unknown model")
 
     # ========================
     # PREDICT

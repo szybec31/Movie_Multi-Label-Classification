@@ -1,28 +1,9 @@
 from .run_experiment import run_experiment
+from sklearn.model_selection import StratifiedKFold
+import numpy as np
 
 def run_cv(df, y, config, n_splits=5):
-
-    from sklearn.model_selection import StratifiedKFold
-    import numpy as np
-
-    # ========================
-    # TYPE ("text" or "graphics" or "early-fusion" or "late-fusion")
-    # ========================
-    if config["type"] == "graphics":
-        X = df["poster_path"]
-
-
-    elif config["type"] == "text":
-        # ========================
-        # SUBTYPE (for text only)
-        # ========================
-        if config["subtype"] == "text":
-            X = df["title"].fillna('') + " " + df["overview"].fillna('')
-        else:
-            X = df[config["subtype"]]
-
-    else:
-        raise ValueError("Unknown type")
+    X = df["title"] # nie ma znaczenia kolumna, gdyz StratifiedKFold.split zwraca i tak tylko id's
 
     # pseudo-stratyfikacja (ważne!)
     y_strat = y.sum(axis=1)

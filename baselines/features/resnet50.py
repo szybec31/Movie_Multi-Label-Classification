@@ -1,16 +1,14 @@
 import os
 import numpy as np
 import torch
-from torchvision import models, transforms
 from PIL import Image
 from tqdm import tqdm
+from torchvision.models import resnet50, ResNet50_Weights
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# 🔥 nowy sposób (bez warningów)
-from torchvision.models import resnet18, ResNet18_Weights
-weights = ResNet18_Weights.DEFAULT
-model = resnet18(weights=weights)
+weights = ResNet50_Weights.DEFAULT
+model = resnet50(weights=weights)
 
 model = torch.nn.Sequential(*list(model.children())[:-1])
 model.eval().to(device)
@@ -29,7 +27,7 @@ def extract_single(path):
         with torch.no_grad():
             feat = model(img).cpu().numpy().flatten()
     except:
-        feat = np.zeros(512)
+        feat = np.zeros(2048)
 
     return feat
 
@@ -37,7 +35,7 @@ def extract_single(path):
 # ========================
 # MAIN CACHE FUNCTION
 # ========================
-def load_or_compute_features(paths, cache_path="cache/image_features.npy"):
+def load_or_compute_features(paths, cache_path="cache/resnet50.npy"):
 
     os.makedirs("cache", exist_ok=True)
 
