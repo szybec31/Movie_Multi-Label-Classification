@@ -68,8 +68,8 @@ def download_and_attach_posters(df, start=0, end=None):
 
 
 # 🔹 zakres (możesz zmieniać)
-START = 4500
-END = 5000
+START = 9000
+END = 9500
 
 df = download_and_attach_posters(df, START, END)
 
