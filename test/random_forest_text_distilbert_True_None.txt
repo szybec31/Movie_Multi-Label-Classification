@@ -1,0 +1,7 @@
+{'type': 'text', 'subtype': 'text', 'threshold': None, 'balanced': True, 'vectorizer': 'distilbert', 'model': 'random_forest'}
+f1_micro: 0.5384 ± 0.0047
+f1_macro: 0.4065 ± 0.0070
+recall: 0.4213 ± 0.0072
+hamming: 0.1047 ± 0.0006
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 1.4746 ± 0.0390

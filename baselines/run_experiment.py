@@ -10,7 +10,7 @@ def run_experiment(df, y, config, split=None):
 
 
     elif config["type"] == "text":
-        if config["vectorizer"] not in ["tfidf", "bert"]:
+        if config["vectorizer"] not in ["tfidf", "distilbert"]:
             raise ValueError("Wrong vectorizer to chosen type")
             config["vectorizer"] = "tfidf"
         # ========================
@@ -47,6 +47,10 @@ def run_experiment(df, y, config, split=None):
         from .features.tfidf import build_tfidf
         X_train, X_test, _ = build_tfidf(X_train, X_test)
 
+    elif config["vectorizer"] == "distilbert":
+        from .features.distilbert import build_distilbert_embedding
+        X_train, X_test = build_distilbert_embedding(X,split=split)
+
     elif config["vectorizer"] == "resnet18":
         from .features.resnet18 import build_image_features
         X_train, X_test, _ = build_image_features(df, split)
@@ -69,7 +73,15 @@ def run_experiment(df, y, config, split=None):
     elif config["model"] == "svm":
         from .models.svm import train_svm
         model = train_svm(X_train, y_train, config["balanced"])
-    
+
+    elif config["model"] == "random_forest":
+        from .models.randomforest import train_random_forest
+        model = train_random_forest(X_train, y_train)
+
+    elif config["model"] == "mlp":
+        from .models.mlp import train_mlp
+        model = train_mlp(X_train, y_train)
+
     else:
         raise ValueError("Unknown model")
 
@@ -80,7 +92,7 @@ def run_experiment(df, y, config, split=None):
         y_proba = model.predict_proba(X_test)
         y_pred = (y_proba > config["threshold"]).astype(int)
 
-    elif config["model"] == "svm":
+    else:
         y_pred = model.predict(X_test)
 
     # ========================

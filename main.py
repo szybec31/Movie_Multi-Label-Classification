@@ -39,10 +39,10 @@ y_count = lt.y_count
     exit()
 '''
 
-for model_type in ["logistic"]: # , "svm"
-    for subtype in ["graphics"]: # "text", "title", "overview"
+for model_type in ["mlp"]: # , "svm" , "logistic", "random_forest", "mlp",
+    for subtype in ["text"]: # "text", "title", "overview", "graphics"
 
-        balances = [True, False]
+        balances = [None] #[True, False]
         
         if model_type == "logistic":
             thresholds = [0.5, 0.3, 0.2]
@@ -53,11 +53,11 @@ for model_type in ["logistic"]: # , "svm"
             for b in balances:
 
                 config = {
-                    "type": "graphics", # text or graphics; soon also early-fusion and late-fusion
+                    "type": "text", # text or graphics; soon also early-fusion and late-fusion
                     "subtype": subtype,
                     "threshold": tr,
                     "balanced": b,
-                    "vectorizer": "resnet50",
+                    "vectorizer": "tfidf",   # "resnet50", "resnet18", "tfidf", "distilbert"
                     "model": model_type
                 }
 
