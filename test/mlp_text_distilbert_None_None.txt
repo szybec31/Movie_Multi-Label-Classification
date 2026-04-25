@@ -1,0 +1,7 @@
+{'type': 'text', 'subtype': 'text', 'threshold': None, 'balanced': None, 'vectorizer': 'distilbert', 'model': 'mlp'}
+f1_micro: 0.6377 ± 0.0072
+f1_macro: 0.5627 ± 0.0023
+recall: 0.5743 ± 0.0106
+hamming: 0.0946 ± 0.0015
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 2.0912 ± 0.0447

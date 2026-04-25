@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 class TextEDA:
-    def __init__(self, df):
+    def __init__(self, df,show=False):
         self.df = df.copy()
-
+        self.show = show
     def drop_na(self):
         self.df = self.df.dropna(subset=['overview'])
         return self.df
@@ -77,4 +77,6 @@ class TextEDA:
         plt.grid(True)
 
         plt.tight_layout()
-        plt.show()
+        plt.savefig("histogram.png")
+        if self.show:
+            plt.show()

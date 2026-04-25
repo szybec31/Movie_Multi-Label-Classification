@@ -39,7 +39,7 @@ def load_or_compute_features(paths, cache_path="cache/resnet50.npy"):
 
     os.makedirs("cache", exist_ok=True)
 
-    # 🔥 jeśli cache istnieje → wczytaj
+    # jeśli cache istnieje → wczytaj
     if os.path.exists(cache_path):
         print("Loading cached image features...")
         return np.load(cache_path)
@@ -64,6 +64,7 @@ def load_or_compute_features(paths, cache_path="cache/resnet50.npy"):
 def build_image_features(df, split_idx=None):
 
     feats = load_or_compute_features(df["poster_path"])
+    print("ResNet50 Ilość cech: ", feats.shape[1])
 
     if split_idx is None:
         return feats, None, None
