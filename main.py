@@ -24,20 +24,23 @@ y = lt.preprocessing()
 y_label = lt.y_labels
 y_count = lt.y_count
 
-'''
-    config = {
-        "type": "graphics", # text or graphics; soon also early-fusion and late-fusion
-        "subtype": "graphics", # for text: text or title or overview
-        "threshold": 0.5, # Number for logistic or None for svm
-        "balanced": False, # True or False
-        "vectorizer": "resnet18", # tfidf, bert, resnet18, resnet50
-        "model": "logistic" # logistic, svm, rf, bert
-    }
+config = {
+    "type": "text", # text or graphics; soon also early-fusion and late-fusion
+    "balanced": True,
+    "vectorizer": "tfidf",   # "resnet50", "resnet18", "tfidf", "distilbert"
+    "model": "logistic",
+    "max_features_tfidf": 20000,
+}
 
-    avg, std = run_cv(df, y, config)
+avg, std = run_cv(df, y, 5, **config)
 
-    exit()
-'''
+print(config)
+for k in avg:
+    print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+
+save_model_info(config, avg, std, "test")
+
+exit()
 
 for model_type in ["mlp"]: # , "svm" , "logistic", "random_forest", "mlp",
     for subtype in ["text"]: # "text", "title", "overview", "graphics"
@@ -58,10 +61,13 @@ for model_type in ["mlp"]: # , "svm" , "logistic", "random_forest", "mlp",
                     "threshold": tr,
                     "balanced": b,
                     "vectorizer": "tfidf",   # "resnet50", "resnet18", "tfidf", "distilbert"
-                    "model": model_type
+                    "model": model_type,
+                    "max_features_tfidf": 20000,
+                    "max_iter": 20,
+                    "learning_rate_init": 0.001
                 }
 
-                avg, std = run_cv(df, y, config)
+                avg, std = run_cv(df, y, 5, **config)
 
                 print(config)
                 for k in avg:
