@@ -1,3 +1,6 @@
+import numpy as np
+from .utils.remake_config import clean_model_config
+
 def run_experiment(df, y, split=None, **config):
 	# ========================
 	# type: str = "text" or "graphics" or "early-fusion" or "late-fusion"
@@ -149,12 +152,18 @@ def run_experiment(df, y, split=None, **config):
 	# if early-fusion then X+X2 and one model, if late-fusion then two models
 	
 	if config["type"] == "early-fusion":
-		import numpy as np
+		# print(f"features_train {np.size(features_train[0])}")
+		# print(f"features_train {np.size(features_train[1])}")
+		# print(f"features_test {np.size(features_test[0])}")
+		# print(f"features_test {np.size(features_test[1])}")
 		X_train_final = np.hstack(features_train)
 		X_test_final  = np.hstack(features_test)
 
 		features_train = [X_train_final]
 		features_test  = [X_test_final]
+
+		# print(f"features_train {np.size(features_train[0])}")
+		# print(f"features_test {np.size(features_test[0])}")
 
     # ========================
     # MODELS AND PREDICTIONS
@@ -177,12 +186,11 @@ def run_experiment(df, y, split=None, **config):
 
 		elif model_name == "svm":
 			from .models.svm import train_svm
-			model = train_svm(Xtr, y_train, config["balanced_list"][i])
+			model = train_svm(Xtr, y_train, config["balanced_list"][i], **clean_model_config(config, ["balanced"]))
 			y_pred = model.predict(Xte)
 
 		elif model_name == "random_forest":
 			from .models.randomforest import train_random_forest
-			from .utils.remake_config import clean_model_config
 			print(f"Balanced: {config["balanced_list"][i]}")
 			model = train_random_forest(Xtr, y_train, balanced=config["balanced_list"][i], **clean_model_config(config, ["balanced"]))
 			y_pred = model.predict(Xte)

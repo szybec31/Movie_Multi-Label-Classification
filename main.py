@@ -24,52 +24,43 @@ y = lt.preprocessing()
 y_label = lt.y_labels
 y_count = lt.y_count
 
-config = {
-    "type": "text", # text or graphics; soon also early-fusion and late-fusion
-    "balanced": True,
-    "vectorizer": "tfidf",   # "resnet50", "resnet18", "tfidf", "distilbert"
-    "model": "logistic",
-    "max_features_tfidf": 20000,
-}
+# config = {
+#     "type": "early-fusion", # text or graphics; soon also early-fusion and late-fusion
+#     "balanced": True,
+#     "vectorizers": ["tfidf", "resnet18"],   # "resnet50", "resnet18", "tfidf", "distilbert"
+#     "model": "svm",
+#     "max_iter_svm": 10000,
+# }
 
-avg, std = run_cv(df, y, 5, **config)
+# avg, std = run_cv(df, y, 5, **config)
 
-print(config)
-for k in avg:
-    print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+# print(config)
+# for k in avg:
+#     print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
 
-save_model_info(config, avg, std, "test")
+# save_model_info(config, avg, std, "test")
 
-exit()
+# exit()
 
-for model_type in ["mlp"]: # , "svm" , "logistic", "random_forest", "mlp",
-    for subtype in ["text"]: # "text", "title", "overview", "graphics"
-
-        balances = [None] #[True, False]
-        
-        if model_type == "logistic":
-            thresholds = [0.5, 0.3, 0.2]
-        else:
-            thresholds = [None]
-
-        for tr in thresholds:
-            for b in balances:
-
+for mt1 in ["svm", "logistic", "random_forest", "mlp"]:
+    for mt2 in ["svm", "logistic", "random_forest", "mlp"]:
+        for vect1 in ["tfidf", "distilbert"]:
+            for vect2 in ["resnet18", "resnet50"]:
                 config = {
-                    "type": "text", # text or graphics; soon also early-fusion and late-fusion
-                    "subtype": subtype,
-                    "threshold": tr,
-                    "balanced": b,
-                    "vectorizer": "tfidf",   # "resnet50", "resnet18", "tfidf", "distilbert"
-                    "model": model_type,
+                    "type": "late-fusion",
+                    "balanced_list": [True, True],
+                    "vectorizers": [vect1, vect2],
+                    "models": [mt1, mt2],
                     "max_features_tfidf": 20000,
                     "max_iter": 20,
-                    "learning_rate_init": 0.001
+                    "learning_rate_init": 0.001,
+                    "max_depth": 5,
+                    #"max_iter_svm": 5000,
                 }
 
-                avg, std = run_cv(df, y, 5, **config)
-
                 print(config)
+                avg, std = run_cv(df, y, 5, **config)
+                
                 for k in avg:
                     print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
 
