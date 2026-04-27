@@ -44,6 +44,10 @@ y_count = lt.y_count
 
 for mt1 in ["svm", "logistic", "random_forest", "mlp"]:
     for mt2 in ["svm", "logistic", "random_forest", "mlp"]:
+
+        if mt1 == "svm" and mt2 == "svm":
+            continue
+
         for vect1 in ["tfidf", "distilbert"]:
             for vect2 in ["resnet18", "resnet50"]:
                 config = {
@@ -55,7 +59,7 @@ for mt1 in ["svm", "logistic", "random_forest", "mlp"]:
                     "max_iter": 20,
                     "learning_rate_init": 0.001,
                     "max_depth": 5,
-                    #"max_iter_svm": 5000,
+                    "max_iter_svm": 5000,
                 }
 
                 print(config)
