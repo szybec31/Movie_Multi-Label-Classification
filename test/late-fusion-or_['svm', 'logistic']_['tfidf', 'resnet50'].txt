@@ -1,0 +1,7 @@
+{'type': 'late-fusion', 'balanced_list': [True, True], 'vectorizers': ['tfidf', 'resnet50'], 'models': ['svm', 'logistic'], 'max_features_tfidf': 20000, 'max_iter': 20, 'learning_rate_init': 0.001, 'max_depth': 5, 'max_iter_svm': 5000}
+f1_micro: 0.5513 ± 0.0041
+f1_macro: 0.4642 ± 0.0092
+recall: 0.7856 ± 0.0018
+hamming: 0.1855 ± 0.0029
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 4.8298 ± 0.0511

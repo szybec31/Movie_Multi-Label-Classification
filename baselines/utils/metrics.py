@@ -1,6 +1,6 @@
 # utils/metrics.py
 
-from sklearn.metrics import f1_score, recall_score, hamming_loss
+from sklearn.metrics import f1_score, recall_score, hamming_loss, accuracy_score
 
 def evaluate(y_test, y_pred):
     return {

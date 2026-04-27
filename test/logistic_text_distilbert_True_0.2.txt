@@ -1,7 +1,0 @@
-{'type': 'text', 'subtype': 'text', 'threshold': 0.2, 'balanced': True, 'vectorizer': 'distilbert', 'model': 'logistic'}
-f1_micro: 0.5287 ± 0.0021
-f1_macro: 0.4651 ± 0.0038
-recall: 0.9276 ± 0.0035
-hamming: 0.2399 ± 0.0022
-avg_labels_true: 2.6105 ± 0.0018
-avg_labels_pred: 6.5504 ± 0.0495

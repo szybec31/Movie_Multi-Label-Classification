@@ -1,7 +1,0 @@
-{'type': 'text', 'balanced': True, 'vectorizer': 'tfidf', 'model': 'logistic', 'max_features_tfidf': 20000}
-f1_micro: 0.6267 ± 0.0039
-f1_macro: 0.5609 ± 0.0123
-recall: 0.6672 ± 0.0036
-hamming: 0.1153 ± 0.0013
-avg_labels_true: 2.6105 ± 0.0018
-avg_labels_pred: 2.9484 ± 0.0124

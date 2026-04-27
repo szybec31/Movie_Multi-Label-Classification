@@ -43,7 +43,7 @@ y_count = lt.y_count
 # exit()
 
 for mt1 in ["svm", "logistic", "random_forest", "mlp"]:
-    for mt2 in ["svm", "logistic", "random_forest", "mlp"]:
+    for mt2 in ["logistic", "random_forest", "mlp"]:
 
         if mt1 == "svm" and mt2 == "svm":
             continue
@@ -63,12 +63,20 @@ for mt1 in ["svm", "logistic", "random_forest", "mlp"]:
                 }
 
                 print(config)
-                avg, std = run_cv(df, y, 5, **config)
-                
-                for k in avg:
-                    print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
 
-                save_model_info(config, avg, std, "test")
+                avg_list, std_list = run_cv(df, y, 5, **config)
+
+                names = config["models"] + ["late-fusion-or", "late-fusion-and", "late-fusion-avg"]
+
+                for i, (avg, std) in enumerate(zip(avg_list, std_list)):
+                    print(f"\n=== {names[i]} ===")
+
+                    for k in avg:
+                        print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+                
+                save_model_info(config, avg_list, std_list, "test")
+
+                
 
 exit()
 

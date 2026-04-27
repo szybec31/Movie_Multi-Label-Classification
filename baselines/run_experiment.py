@@ -1,5 +1,6 @@
 import numpy as np
 from .utils.remake_config import clean_model_config
+from .utils.metrics import evaluate
 
 def run_experiment(df, y, split=None, **config):
 	# ========================
@@ -170,6 +171,7 @@ def run_experiment(df, y, split=None, **config):
     # ========================
 	
 	preds = []
+	evaluations = []
 
 	for i, model_name in enumerate(config["models"]):
 
@@ -203,6 +205,7 @@ def run_experiment(df, y, split=None, **config):
 		else:
 			raise ValueError("Unknown model")
 
+		evaluations.append(evaluate(y_test, y_pred))
 		preds.append(y_pred)
 
     # ========================
@@ -213,11 +216,8 @@ def run_experiment(df, y, split=None, **config):
 		y_pred = np.mean(preds, axis=0) > 0.5
 		y_pred = y_pred.astype(int)
 
-	else:
-		y_pred = preds[0]
+		evaluations.append(evaluate(y_test, np.logical_or.reduce(preds).astype(int)))
+		evaluations.append(evaluate(y_test, np.logical_and.reduce(preds).astype(int)))
+		evaluations.append(evaluate(y_test, (np.mean(preds, axis=0) > 0.5).astype(int)))
 
-    # ========================
-    # METRICS
-    # ========================
-	from .utils.metrics import evaluate
-	return evaluate(y_test, y_pred)
+	return evaluations
