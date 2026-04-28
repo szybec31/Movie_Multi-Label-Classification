@@ -1,6 +1,7 @@
 import numpy as np
 from .utils.remake_config import clean_model_config
 from .utils.metrics import evaluate
+from .utils.clear import clean_text
 
 def run_experiment(df, y, split=None, **config):
 	# ========================
@@ -77,7 +78,11 @@ def run_experiment(df, y, split=None, **config):
 			config["subtype"] = "text"
 		
 		if config["subtype"] == "text":
-			X1 = df["title"].fillna('') + " " + df["overview"].fillna('')
+			df["text"] = df["title"].fillna('') + " " + df["overview"].fillna('')
+			if config["vectorizers"][0] == "tfidf":
+				X1 = df["text"].apply(clean_text)
+			else:
+				X1 = df["text"]
 		elif config["subtype"] in ["title", "overview"]:
 			X1 = df[config["subtype"]]
 			

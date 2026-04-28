@@ -1,0 +1,7 @@
+{'type': 'text', 'balanced': True, 'vectorizer': 'tfidf', 'model': 'svm', 'max_features_tfidf': 20000, 'max_iter': 40, 'learning_rate_init': 0.001, 'max_depth': 5, 'max_iter_svm': 5000}
+f1_micro: 0.6039 ± 0.0068
+f1_macro: 0.5298 ± 0.0195
+recall: 0.5867 ± 0.0091
+hamming: 0.1116 ± 0.0015
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 2.4615 ± 0.0297
