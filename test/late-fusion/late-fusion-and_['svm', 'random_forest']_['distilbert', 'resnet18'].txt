@@ -1,0 +1,7 @@
+{'type': 'late-fusion', 'balanced_list': [True, True], 'vectorizers': ['distilbert', 'resnet18'], 'models': ['svm', 'random_forest'], 'max_features_tfidf': 20000, 'max_iter': 20, 'learning_rate_init': 0.001, 'max_depth': 5, 'max_iter_svm': 5000}
+f1_micro: 0.5538 ± 0.0064
+f1_macro: 0.4233 ± 0.0092
+recall: 0.4678 ± 0.0056
+hamming: 0.1093 ± 0.0015
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 1.7999 ± 0.0087
