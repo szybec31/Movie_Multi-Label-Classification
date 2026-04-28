@@ -54,11 +54,11 @@ class TextEDA:
         print(50 * "==")
 
         if y_labels is not None and y_count is not None:
-            summary = pd.DataFrame({
+            self.summary = pd.DataFrame({
                 "Kategoria": y_labels,
                 "Ilość": y_count
             })
-            print(summary.sort_values(by="Ilość", ascending=False))
+            print(self.summary.sort_values(by="Ilość", ascending=False))
 
     def chart_summary(self):
         plt.figure()
@@ -78,5 +78,17 @@ class TextEDA:
 
         plt.tight_layout()
         plt.savefig("histogram.png")
+        if self.show:
+            plt.show()
+
+    def class_distribution(self):
+        plt.bar(self.summary['Kategoria'],self.summary['Ilość'])
+        plt.grid(True)
+        plt.xticks(rotation=35)
+        plt.title('Class Distribution')
+        plt.xlabel('Class')
+        plt.ylabel('Count')
+        plt.tight_layout()
+        plt.savefig("class_distribution.png")
         if self.show:
             plt.show()
