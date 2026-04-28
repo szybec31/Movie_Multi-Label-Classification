@@ -15,7 +15,7 @@ pd.set_option('display.max_rows', 20)
 df = pd.read_csv("movies.csv")
 
 # EDA - podstawowe informacje, usunięcie null
-eda = TextEDA(df)
+eda = TextEDA(df,True)
 # eda.display_dataset_basic_info()
 df = eda.drop_na()
 
@@ -148,4 +148,5 @@ exit()
 
 # Podsumowanie informacji na temat zbioru
 eda.display_summary(y=y,y_labels=y_label,y_count=y_count)
-# eda.chart_summary()
+eda.chart_summary()
+eda.class_distribution()
