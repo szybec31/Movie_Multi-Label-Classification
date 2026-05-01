@@ -1,7 +1,0 @@
-{'type': 'late-fusion', 'balanced_list': [True, True], 'vectorizers': ['tfidf', 'resnet18'], 'models': ['svm', 'random_forest'], 'max_features_tfidf': 20000, 'max_iter': 20, 'learning_rate_init': 0.001, 'max_depth': 5, 'max_iter_svm': 5000}
-f1_micro: 0.5701 ± 0.0052
-f1_macro: 0.4893 ± 0.0140
-recall: 0.7926 ± 0.0037
-hamming: 0.1734 ± 0.0029
-avg_labels_true: 2.6105 ± 0.0018
-avg_labels_pred: 4.6486 ± 0.0384

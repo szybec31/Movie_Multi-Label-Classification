@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import re
 
 class TextEDA:
     def __init__(self, df,show=False):
@@ -92,3 +93,63 @@ class TextEDA:
         plt.savefig("class_distribution.png")
         if self.show:
             plt.show()
+
+    def check_label_leakage(self, y, y_labels):
+        """
+        text_series: pd.Series z tekstem (np. title+overview)
+        y: macierz (n_samples, n_labels) - multilabel (0/1)
+        y_labels: lista nazw klas
+
+        return:
+            DataFrame z:
+            - total_occurrences: ile razy słowo pojawiło się w całym zbiorze
+            - samples_with_word: ile próbek zawiera słowo
+            - leakage_in_class: ile próbek z daną klasą zawiera jej nazwę
+            - leakage_ratio: % próbek danej klasy z leakiem
+        """
+        text_series = self.df["title"].fillna('') + " " + self.df["overview"].fillna('')
+
+        results = []
+
+        texts = text_series.fillna("").str.lower()
+
+        for i, label in enumerate(y_labels):
+            label_lower = label.lower()
+
+            # regex żeby łapać całe słowa (np. "war", a nie "reward")
+            pattern = r"\b" + re.escape(label_lower) + r"\b"
+
+            # czy w tekście występuje słowo
+            contains_word = texts.str.contains(pattern, regex=True)
+
+            # ile razy występuje (globalnie)
+            total_occurrences = texts.str.count(pattern).sum()
+
+            # ile próbek zawiera słowo
+            samples_with_word = contains_word.sum()
+
+            # maska próbek tej klasy
+            class_mask = y[:, i] == 1
+
+            # ile próbek tej klasy zawiera słowo (leak)
+            leakage_in_class = (contains_word & class_mask).sum()
+
+            # ile próbek tej klasy ogólnie
+            total_in_class = class_mask.sum()
+
+            # procent leakage
+            leakage_ratio = (
+                leakage_in_class / total_in_class
+                if total_in_class > 0 else 0
+            )
+
+            results.append({
+                "label": label,
+                "total_occurrences": int(total_occurrences),
+                "samples_with_word": int(samples_with_word),
+                "leakage_in_class": int(leakage_in_class),
+                "total_in_class": int(total_in_class),
+                "leakage_ratio": round(leakage_ratio, 4)
+            })
+
+        return pd.DataFrame(results).sort_values(by="leakage_ratio", ascending=False)

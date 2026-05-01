@@ -1,0 +1,7 @@
+{'type': 'graphics', 'balanced': True, 'vectorizer': 'resnet18', 'model': 'svm', 'max_iter': 40, 'learning_rate_init': 0.001, 'max_depth': 5, 'max_iter_svm': 5000}
+f1_micro: 0.4471 ± 0.0056
+f1_macro: 0.3583 ± 0.0048
+recall: 0.6463 ± 0.0099
+hamming: 0.2318 ± 0.0023
+avg_labels_true: 2.6105 ± 0.0018
+avg_labels_pred: 4.9365 ± 0.0432
