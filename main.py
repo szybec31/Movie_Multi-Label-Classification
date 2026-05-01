@@ -25,7 +25,7 @@ y = lt.preprocessing()
 y_label = lt.y_labels
 y_count = lt.y_count
 
-test_type = "text" # or "graphics" or "late-fusion"
+test_type = "late-fusion" #  "graphics" or "late-fusion" or "text"
 
 if test_type == "text":
 
@@ -61,7 +61,7 @@ if test_type == "text":
                 print(f"\n=== {names[i]} ===")
 
                 for k in avg:
-                    print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+                    print(f"{k}: {avg[k]:.3f} ({std[k]:.3f})")
             
             save_model_info(config, avg_list, std_list, "test\\text", (end - start))
 
@@ -96,20 +96,20 @@ elif test_type == "graphics":
                 print(f"\n=== {names[i]} ===")
 
                 for k in avg:
-                    print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+                    print(f"{k}: {avg[k]:.3f} ({std[k]:.3f})")
             
             save_model_info(config, avg_list, std_list, "test\\graphics", (end - start))
 
 elif test_type == "late-fusion":
 
-    for mt1 in ["svm", "logistic", "random_forest", "mlp"]:
-        for mt2 in ["logistic", "random_forest", "mlp"]:
+    for mt1 in ["logistic", "random_forest", "mlp"]: # "svm", "logistic", "random_forest", "mlp"
+        for mt2 in ["logistic", "random_forest", "mlp"]: # "logistic", "random_forest", "mlp"
 
             if mt1 == "svm" and (mt2 == "logistic" or  mt2 == "random_forest"):
                 continue
 
-            for vect1 in ["tfidf", "distilbert"]:
-                for vect2 in ["resnet18", "resnet50"]:
+            for vect1 in ["distilbert"]: #"tfidf",
+                for vect2 in ["resnet50"]: # "resnet18",
                     config = {
                         "type": "late-fusion",
                         "balanced_list": [True, True],
@@ -132,17 +132,17 @@ elif test_type == "late-fusion":
 
                     print(f"Time: {(end - start)}")
 
-                    names = config["models"] + ["late-fusion-or", "late-fusion-and", "late-fusion-avg"]
+                    names = config["models"] + ["late-fusion-or", "late-fusion-and", "late-fusion-avg","late-fusion-weighted-avg"]
 
                     for i, (avg, std) in enumerate(zip(avg_list, std_list)):
                         print(f"\n=== {names[i]} ===")
 
                         for k in avg:
-                            print(f"{k}: {avg[k]:.4f} ± {std[k]:.4f}")
+                            print(f"{k}: {avg[k]:.3f} ({std[k]:.3f})")
                     
                     save_model_info(config, avg_list, std_list, "test\\late-fusion", (end - start), False)
 
-                
+
 
 exit()
 
@@ -150,3 +150,5 @@ exit()
 eda.display_summary(y=y,y_labels=y_label,y_count=y_count)
 eda.chart_summary()
 eda.class_distribution()
+leak_df = eda.check_label_leakage(y, y_label)
+print(leak_df)

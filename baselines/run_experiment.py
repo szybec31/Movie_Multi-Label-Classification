@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.metrics import f1_score
 from .utils.remake_config import clean_model_config
 from .utils.metrics import evaluate
 from .utils.clear import clean_text
@@ -176,6 +177,7 @@ def run_experiment(df, y, split=None, **config):
     # ========================
 	
 	preds = []
+	probas = []
 	evaluations = []
 
 	for i, model_name in enumerate(config["models"]):
@@ -201,28 +203,159 @@ def run_experiment(df, y, split=None, **config):
 			print(f"Balanced: {config["balanced_list"][i]}")
 			model = train_random_forest(Xtr, y_train, balanced=config["balanced_list"][i], **clean_model_config(config, ["balanced"]))
 			y_pred = model.predict(Xte)
+			y_proba = model.predict_proba(Xte)
 
 		elif model_name == "mlp":
 			from .models.mlp import train_mlp
 			model = train_mlp(Xtr, y_train, **config)
 			y_pred = model.predict(Xte)
+			y_proba = model.predict_proba(Xte)
 
 		else:
 			raise ValueError("Unknown model")
 
 		evaluations.append(evaluate(y_test, y_pred))
 		preds.append(y_pred)
+		probas.append(y_proba)
 
-    # ========================
-    # LATE FUSION
-    # ========================
+	# ========================
+	# LATE FUSION (CLEAN VERSION)
+	# ========================
 	if config["type"] == "late-fusion":
-        # np. OR / average
-		y_pred = np.mean(preds, axis=0) > 0.5
-		y_pred = y_pred.astype(int)
+		proba1, proba2 = probas
+		proba1 = np.array(proba1)
+		proba2 = np.array(proba2)
 
-		evaluations.append(evaluate(y_test, np.logical_or.reduce(preds).astype(int)))
-		evaluations.append(evaluate(y_test, np.logical_and.reduce(preds).astype(int)))
-		evaluations.append(evaluate(y_test, (np.mean(preds, axis=0) > 0.5).astype(int)))
+		# ========================
+		# BASELINES
+		# ========================
+		y_or = np.logical_or.reduce(preds).astype(int)
+		y_and = np.logical_and.reduce(preds).astype(int)
+		y_avg = (np.mean(probas, axis=0) > 0.5).astype(int)
+
+		evaluations.append(evaluate(y_test, y_or))
+		evaluations.append(evaluate(y_test, y_and))
+		evaluations.append(evaluate(y_test, y_avg))
+
+		# ==========================================
+		# PER-CLASS WEIGHTED FUSION
+		# ==========================================
+
+		# predykcje train potrzebne do wyliczenia jakości klas
+		train_preds = []
+
+		for i, model_name in enumerate(config["models"]):
+
+			Xtr = features_train[i]
+
+			if model_name == "logistic":
+				from .models.logistic import train_logistic
+
+				model = train_logistic(
+					Xtr,
+					y_train,
+					config["balanced_list"][i]
+				)
+
+				threshold = config.get("thresholds", [0.5, 0.5])[i] or 0.5
+
+				proba_train = model.predict_proba(Xtr)
+				pred_train = (proba_train > threshold).astype(int)
+
+			elif model_name == "random_forest":
+				from .models.randomforest import train_random_forest
+
+				model = train_random_forest(
+					Xtr,
+					y_train,
+					balanced=config["balanced_list"][i],
+					**clean_model_config(config, ["balanced"])
+				)
+
+				pred_train = model.predict(Xtr)
+
+			elif model_name == "mlp":
+				from .models.mlp import train_mlp
+
+				model = train_mlp(Xtr, y_train, **config)
+
+				pred_train = model.predict(Xtr)
+
+			else:
+				pred_train = preds[i]
+
+			train_preds.append(pred_train)
+
+		pred1_train, pred2_train = train_preds
+
+		# ==========================================
+		# F1 PER CLASS
+		# ==========================================
+		f1_text = f1_score(
+			y_train,
+			pred1_train,
+			average=None,
+			zero_division=0
+		)
+
+		f1_image = f1_score(
+			y_train,
+			pred2_train,
+			average=None,
+			zero_division=0
+		)
+
+		# ==========================================
+		# STABLE WEIGHTS
+		# ==========================================
+		eps = 1e-6
+
+		w_text = (f1_text + eps) / (f1_text + f1_image + eps)
+		w_image = (f1_image + eps) / (f1_text + f1_image + eps)
+
+		# ==========================================
+		# CLIPPING (ważne!)
+		# ==========================================
+		w_text = np.clip(w_text, 0.25, 0.75)
+		w_image = np.clip(w_image, 0.25, 0.75)
+
+		# normalizacja po clip
+		norm = w_text + w_image
+
+		w_text = w_text / norm
+		w_image = w_image / norm
+
+		# reshape do broadcastingu
+		w_text = w_text.reshape(1, -1)
+		w_image = w_image.reshape(1, -1)
+
+		# ==========================================
+		# WEIGHTED COMBINATION
+		# ==========================================
+		combined = (
+				w_text * proba1 +
+				w_image * proba2
+		)
+
+		# ==========================================
+		# THRESHOLD
+		# ==========================================
+		threshold = config.get("fusion_threshold", 0.5)
+
+		y_weighted = (combined > threshold).astype(int)
+
+		evaluations.append(evaluate(y_test, y_weighted))
+
+		# ==========================================
+		# DEBUG INFO
+		# ==========================================
+		print("\n[FUSION CLASS WEIGHTS]")
+
+		for i in range(len(f1_text)):
+			print(
+				f"Class {i}: "
+				f"text={w_text[0][i]:.2f} | "
+				f"image={w_image[0][i]:.2f}"
+			)
 
 	return evaluations
