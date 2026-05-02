@@ -102,11 +102,9 @@ elif test_type == "graphics":
 
 elif test_type == "late-fusion":
 
-    for mt1 in ["logistic", "random_forest", "mlp"]: # "svm", "logistic", "random_forest", "mlp"
-        for mt2 in ["logistic", "random_forest", "mlp"]: # "logistic", "random_forest", "mlp"
+    for mt1 in ["random_forest", "mlp"]: # "svm", "logistic", "random_forest", "mlp"
+        for mt2 in ["random_forest", "mlp"]: # "logistic", "random_forest", "mlp"
 
-            if mt1 == "svm" and (mt2 == "logistic" or  mt2 == "random_forest"):
-                continue
 
             for vect1 in ["distilbert"]: #"tfidf",
                 for vect2 in ["resnet50"]: # "resnet18",
@@ -142,7 +140,41 @@ elif test_type == "late-fusion":
                     
                     save_model_info(config, avg_list, std_list, "test\\late-fusion", (end - start), False)
 
+elif test_type == "early-fusion":
 
+    for mt1 in ["logistic", "random_forest", "mlp"]:
+        for vect1 in ["distilbert"]: #"tfidf",
+            for vect2 in ["resnet50"]: # "resnet18",
+                config = {
+                    "type": "early-fusion",
+                    "balanced": True,
+                    "vectorizers": [vect1, vect2],
+                    "model": mt1,
+                    "max_iter": 40,
+                    "learning_rate_init": 0.001,
+                    "max_depth": 5,
+                    "max_iter_svm": 5000,
+                }
+
+                print(config)
+
+                start = time.time()
+
+                avg_list, std_list = run_cv(df, y, 5, **config)
+
+                end = time.time()
+
+                print(f"Time: {(end - start)}")
+
+                names = [config["model"]] + ["late-fusion-or", "late-fusion-and", "late-fusion-avg","late-fusion-weighted-avg"]
+
+                for i, (avg, std) in enumerate(zip(avg_list, std_list)):
+                    print(f"\n=== {names[i]} ===")
+
+                    for k in avg:
+                        print(f"{k}: {avg[k]:.3f} ({std[k]:.3f})")
+                
+                save_model_info(config, avg_list, std_list, "test\\early-fusion", (end - start), False)
 
 exit()
 
