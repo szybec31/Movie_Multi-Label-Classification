@@ -78,7 +78,7 @@ class TextEDA:
         plt.grid(True)
 
         plt.tight_layout()
-        plt.savefig("histogram.png")
+        plt.savefig("results/histogram.png")
         if self.show:
             plt.show()
 
@@ -90,7 +90,7 @@ class TextEDA:
         plt.xlabel('Class')
         plt.ylabel('Count')
         plt.tight_layout()
-        plt.savefig("class_distribution.png")
+        plt.savefig("results/class_distribution.png")
         if self.show:
             plt.show()
 

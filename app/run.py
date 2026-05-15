@@ -1,3 +1,5 @@
+import torch
+print("TORCH OK")
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QStackedWidget, QPushButton, QHBoxLayout,QListWidget, QFrame)
 from PyQt5.QtCore import Qt
@@ -5,6 +7,9 @@ from styles import get_dark_style
 from step1 import Step1
 from step2 import Step2
 from step3 import Step3
+
+from app.models.text_vectorizer import TextVectorizer
+from app.models.image_vectorizer import ImageVectorizer
 import sys
 
 class AppState:
@@ -28,6 +33,12 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.text_vectorizer = TextVectorizer()
+        if not self.text_vectorizer.ready:
+            self.main.show_error(
+                "Model not loaded. Check internet connection. Model needs connection only at first run."
+            )
+        self.image_vectorizer = ImageVectorizer()
         self.cat_list = [
             'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Drama', 'Family',
             'Fantasy', 'History', 'Horror', 'Music', 'Mystery', 'Romance',
