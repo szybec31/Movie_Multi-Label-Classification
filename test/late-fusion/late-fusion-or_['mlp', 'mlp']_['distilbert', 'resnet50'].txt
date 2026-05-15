@@ -1,7 +1,7 @@
 {'type': 'late-fusion', 'balanced_list': [True, True], 'vectorizers': ['distilbert', 'resnet50'], 'models': ['mlp', 'mlp'], 'max_features_tfidf': 20000, 'max_iter': 40, 'learning_rate_init': 0.001, 'max_depth': 5, 'max_iter_svm': 5000}
-f1_micro: 0.645 (0.013)
-f1_macro: 0.574 (0.010)
-recall: 0.594 (0.020)
-hamming: 0.095 (0.003)
+f1_micro: 0.663 (0.009)
+f1_macro: 0.589 (0.009)
+recall: 0.707 (0.016)
+hamming: 0.104 (0.004)
 avg_labels_true: 2.610 (0.002)
-avg_labels_pred: 2.199 (0.100)
+avg_labels_pred: 2.958 (0.133)

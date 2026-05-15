@@ -9,3 +9,4 @@ app/run.spec
 app/build/
 app/dist/
 cache/resnet50.npy
+results/

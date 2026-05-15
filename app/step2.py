@@ -145,10 +145,13 @@ class Step2(QWidget):
     # WALIDACJA
     # =========================
     def validate(self):
+
         title = self.title_input.text().strip()
         desc = self.desc_input.toPlainText().strip()
 
+        # TEXT ONLY IF ENABLED
         if self.state.sources["text"]:
+
             if not title:
                 self.main.show_error("No title")
                 return False
@@ -157,16 +160,28 @@ class Step2(QWidget):
                 self.main.show_error("No description")
                 return False
 
-        if self.word_count(desc) < 2:           # MA BYĆ 25 lub więcej
-                self.main.show_error("The description must consist of at least 25 words")
+            if self.word_count(desc) < 25:
+                self.main.show_error(
+                    "The description must consist of at least 25 words"
+                )
                 return False
 
+        # IMAGE VALIDATION
         if self.state.sources["image"]:
-            if not self.constrains(self.state.data["image_path"],(".jpg", ".png")):
+
+            if not self.constrains(
+                    self.state.data["image_path"],
+                    (".jpg", ".png")
+            ):
                 return False
 
+        # AUDIO/VIDEO VALIDATION
         if self.state.sources["audio_video"]:
-            if not self.constrains(self.state.data["audio_video_path"],(".mp4", ".avi", ".mp3", ".wav")):
+
+            if not self.constrains(
+                    self.state.data["audio_video_path"],
+                    (".mp4", ".avi", ".mp3", ".wav")
+            ):
                 return False
 
         self.main.clear_output()
