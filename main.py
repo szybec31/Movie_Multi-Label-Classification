@@ -130,5 +130,5 @@ def main(test_type: str) -> None:
         print(leak_df)
 
 if __name__ == "__main__":
-    test_type = "graphics" #  "graphics", "late-fusion", "text", "early-fusion" or "info"
+    test_type = "early-fusion" #  "graphics", "late-fusion", "text", "early-fusion" or "info"
     main(test_type)
