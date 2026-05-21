@@ -2,7 +2,7 @@ from .run_experiment import run_experiment
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 
-def run_cv(df, y, n_splits=5, **config):
+def run_cv(df, y, n_splits=10, **config):
     # ALL DESCRIPTIONS IN run_experiment.py
 
     X = df["title"] # nie ma znaczenia kolumna, gdyz StratifiedKFold.split zwraca i tak tylko id's
