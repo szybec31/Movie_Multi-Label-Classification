@@ -17,7 +17,8 @@ ALPHA = 0.05
 # Dostępne metryki:
 # f1_micro
 # f1_macro
-# recall
+# b1
+# recall_micro
 # hamming
 # avg_labels_true
 # avg_labels_pred
@@ -31,8 +32,8 @@ def load_results(csv_path: str) -> pd.DataFrame:
     df = pd.read_csv(csv_path)
 
     # Ujednolicenie wartości None/NaN
-    df["Vectorizer2"] = df["Vectorizer2"].fillna("none")
-    df["Model2"] = df["Model2"].fillna("none")
+    df["vectorizer2"] = df["vectorizer2"].fillna("none")
+    df["model2"] = df["model2"].fillna("none")
 
     return df
 
@@ -51,7 +52,7 @@ def select_model(
     for key, value in model_config.items():
         filtered = filtered[filtered[key] == value]
 
-    return filtered.sort_values("Fold")
+    return filtered.sort_values("fold")
 
 
 # =========================================================
@@ -65,9 +66,9 @@ def prepare_paired_samples(
 ):
 
     merged = pd.merge(
-        df_a[["Fold", metric]],
-        df_b[["Fold", metric]],
-        on="Fold",
+        df_a[["fold", metric]],
+        df_b[["fold", metric]],
+        on="fold",
         suffixes=("_A", "_B")
     )
 
@@ -278,19 +279,19 @@ def compare_models(
 if __name__ == "__main__":
 
     model_A = {
-        "Type": "text",
-        "Vectorizer1": "Distilbert",
-        "Model1": "MLP",
-        "Vectorizer2": "none",
-        "Model2": "none"
+        "type": "text",
+        "vectorizer1": "distilbert",
+        "model1": "mlp",
+        "vectorizer2": "none",
+        "model2": "none"
     }
 
     model_B = {
-        "Type": "late-fusion",
-        "Vectorizer1": "Distilbert",
-        "Model1": "MLP",
-        "Vectorizer2": "Resnet50",
-        "Model2": "RF"
+        "type": "graphics",
+        "vectorizer1": "resnet50",
+        "model1": "random_forest",
+        "vectorizer2": "none",
+        "model2": "none"
     }
 
     compare_models(
