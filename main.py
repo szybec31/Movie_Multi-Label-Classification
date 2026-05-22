@@ -75,7 +75,7 @@ def main(test_type: str) -> None:
 
     elif test_type == "late-fusion":
 
-        for mt1 in ["random_forest", "mlp"]: # "svm", "logistic", "random_forest", "mlp"
+        for mt1 in ["mlp"]: # "svm", "logistic", "random_forest", "mlp"
             for mt2 in ["logistic", "random_forest", "mlp"]: # "logistic", "random_forest", "mlp"
                 for vect1 in ["distilbert"]: #"tfidf",
                     for vect2 in ["resnet50"]: # "resnet18",

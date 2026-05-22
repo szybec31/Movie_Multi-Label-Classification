@@ -279,11 +279,12 @@ def compare_models(
 if __name__ == "__main__":
 
     model_A = {
-        "type": "text",
+        "type": "late-fusion",
+        "subtype": "late-fusion-or",
         "vectorizer1": "distilbert",
-        "model1": "mlp",
-        "vectorizer2": "none",
-        "model2": "none"
+        "model1": "svm",
+        "vectorizer2": "resnet50",
+        "model2": "logistic"
     }
 
     model_B = {
