@@ -3,11 +3,8 @@ from sklearn.model_selection import StratifiedKFold
 import numpy as np
 
 def run_cv(df, y, n_splits=10, **config):
-    # ALL DESCRIPTIONS IN run_experiment.py
 
-    X = df["title"] # nie ma znaczenia kolumna, gdyz StratifiedKFold.split zwraca i tak tylko id's
-
-    # pseudo-stratyfikacja (ważne!)
+    X = df["title"]
     y_strat = y.sum(axis=1)
 
     skf = StratifiedKFold(
@@ -16,43 +13,29 @@ def run_cv(df, y, n_splits=10, **config):
         random_state=42
     )
 
-    all_results = []
+    all_results = {}
 
     for fold, (train_idx, test_idx) in enumerate(skf.split(X, y_strat)):
+
         print(f"Fold {fold+1}/{n_splits}")
 
-        results_list = run_experiment(
+        fold_results = run_experiment(
             df,
             y,
             split=(train_idx, test_idx),
             **config
         )
 
-        all_results.append(results_list)
+        for model_name, metrics in fold_results.items():
 
-    # ========================
-    # AGREGACJA PER MODEL
-    # ========================
+            if model_name not in all_results:
+                all_results[model_name] = []
 
-    n_models = len(all_results[0])  # np. 3 (model1, model2, fusion)
+            row = {
+                "fold": fold,
+                **metrics
+            }
 
-    avg_all = []
-    std_all = []
+            all_results[model_name].append(row)
 
-    for m in range(n_models):
-        model_results = [fold[m] for fold in all_results]
-
-        avg = {
-            key: np.mean([r[key] for r in model_results])
-            for key in model_results[0]
-        }
-
-        std = {
-            key: np.std([r[key] for r in model_results])
-            for key in model_results[0]
-        }
-
-        avg_all.append(avg)
-        std_all.append(std)
-
-    return avg_all, std_all
+    return all_results

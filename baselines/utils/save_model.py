@@ -1,25 +1,39 @@
+import pandas as pd
 import os
 
-def save_model_info(config, avg_list, std_list, dir_name, time, all = True):
-    os.makedirs(dir_name, exist_ok=True)
+def save_model_info(config, results, elapsed_time, add: str = ""):
 
-    names = config.get("models", [config.get("model", None)]) + [config.get("models", None)]*4
-    types = ["text", "graphics", "late-fusion-or", "late-fusion-and", "late-fusion-avg", "late-fusion-weighted-avg"] if "models" in config else [config["type"]]
-    vectorizers = (config.get("vectorizers", [config.get("vectorizer", None)]) if config["type"] != "early-fusion" else [config.get("vectorizers", None)]) + [config.get("vectorizers", None)]*4
+    file_path = "results.csv"
 
-    for i, (avg, std) in enumerate(zip(avg_list, std_list)):
-        name = names[i]
+    rows = []
 
-        file_path = os.path.join(
-            dir_name,
-            f"{types[i]}_{name}_{vectorizers[i]}.txt"
-        )
+    for subtype, folds in results.items():
 
-        output = []
-        output.append(str(config))
+        for fold_result in folds:
 
-        for k in avg:
-            output.append(f"{k}: {avg[k]:.3f} ({std[k]:.3f})")
+            row = {
+                "type": config["type"],
+                "subtype": subtype if subtype != "none" else None,
+                "add": add,
+                "vectorizer1": str(config["vectorizers"][0]),
+                "model1": str(config["models"][0]),
+                "vectorizer2": str(config["vectorizers"][1]) if len(config["vectorizers"]) == 2 else None,
+                "model2": str(config["models"][1]) if len(config["models"]) == 2 else None,
+                "fold": fold_result["fold"],
+                "time": elapsed_time,
+            }
 
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(output))
+            row.update(fold_result)
+            row["config"] = str(config)
+
+            rows.append(row)
+
+    df_new = pd.DataFrame(rows)
+
+    if os.path.exists(file_path):
+        df_old = pd.read_csv(file_path)
+        df_final = pd.concat([df_old, df_new], ignore_index=True)
+    else:
+        df_final = df_new
+
+    df_final.to_csv(file_path, index=False)
