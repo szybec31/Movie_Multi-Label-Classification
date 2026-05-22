@@ -241,125 +241,125 @@ def run_experiment(df, y, split=None, **config):
 		evaluations["late-fusion-and"] = evaluate(y_test, y_and)
 		evaluations["late-fusion-avg"] = evaluate(y_test, y_avg)
 
-		# ==========================================
-		# PER-CLASS WEIGHTED FUSION
-		# ==========================================
+		# # ==========================================
+		# # PER-CLASS WEIGHTED FUSION
+		# # ==========================================
 
-		# predykcje train potrzebne do wyliczenia jakości klas
-		train_preds = []
+		# # predykcje train potrzebne do wyliczenia jakości klas
+		# train_preds = []
 
-		for i, model_name in enumerate(config["models"]):
+		# for i, model_name in enumerate(config["models"]):
 
-			Xtr = features_train[i]
+		# 	Xtr = features_train[i]
 
-			if model_name == "logistic":
-				from .models.logistic import train_logistic
+		# 	if model_name == "logistic":
+		# 		from .models.logistic import train_logistic
 
-				model = train_logistic(
-					Xtr,
-					y_train,
-					config["balanced_list"][i]
-				)
+		# 		model = train_logistic(
+		# 			Xtr,
+		# 			y_train,
+		# 			config["balanced_list"][i]
+		# 		)
 
-				threshold = config.get("thresholds", [0.5, 0.5])[i] or 0.5
+		# 		threshold = config.get("thresholds", [0.5, 0.5])[i] or 0.5
 
-				proba_train = model.predict_proba(Xtr)
-				pred_train = (proba_train > threshold).astype(int)
+		# 		proba_train = model.predict_proba(Xtr)
+		# 		pred_train = (proba_train > threshold).astype(int)
 
-			elif model_name == "random_forest":
-				from .models.randomforest import train_random_forest
+		# 	elif model_name == "random_forest":
+		# 		from .models.randomforest import train_random_forest
 
-				model = train_random_forest(
-					Xtr,
-					y_train,
-					balanced=config["balanced_list"][i],
-					**clean_model_config(config, ["balanced"])
-				)
+		# 		model = train_random_forest(
+		# 			Xtr,
+		# 			y_train,
+		# 			balanced=config["balanced_list"][i],
+		# 			**clean_model_config(config, ["balanced"])
+		# 		)
 
-				pred_train = model.predict(Xtr)
+		# 		pred_train = model.predict(Xtr)
 
-			elif model_name == "mlp":
-				from .models.mlp import train_mlp
+		# 	elif model_name == "mlp":
+		# 		from .models.mlp import train_mlp
 
-				model = train_mlp(Xtr, y_train, **config)
+		# 		model = train_mlp(Xtr, y_train, **config)
 
-				pred_train = model.predict(Xtr)
+		# 		pred_train = model.predict(Xtr)
 
-			else:
-				pred_train = preds[i]
+		# 	else:
+		# 		pred_train = preds[i]
 
-			train_preds.append(pred_train)
+		# 	train_preds.append(pred_train)
 
-		pred1_train, pred2_train = train_preds
+		# pred1_train, pred2_train = train_preds
 
-		# ==========================================
-		# F1 PER CLASS
-		# ==========================================
-		f1_text = f1_score(
-			y_train,
-			pred1_train,
-			average=None,
-			zero_division=0
-		)
+		# # ==========================================
+		# # F1 PER CLASS
+		# # ==========================================
+		# f1_text = f1_score(
+		# 	y_train,
+		# 	pred1_train,
+		# 	average=None,
+		# 	zero_division=0
+		# )
 
-		f1_image = f1_score(
-			y_train,
-			pred2_train,
-			average=None,
-			zero_division=0
-		)
+		# f1_image = f1_score(
+		# 	y_train,
+		# 	pred2_train,
+		# 	average=None,
+		# 	zero_division=0
+		# )
 
-		# ==========================================
-		# STABLE WEIGHTS
-		# ==========================================
-		eps = 1e-6
+		# # ==========================================
+		# # STABLE WEIGHTS
+		# # ==========================================
+		# eps = 1e-6
 
-		w_text = (f1_text + eps) / (f1_text + f1_image + eps)
-		w_image = (f1_image + eps) / (f1_text + f1_image + eps)
+		# w_text = (f1_text + eps) / (f1_text + f1_image + eps)
+		# w_image = (f1_image + eps) / (f1_text + f1_image + eps)
 
-		# ==========================================
-		# CLIPPING (ważne!)
-		# ==========================================
-		w_text = np.clip(w_text, 0.25, 0.75)
-		w_image = np.clip(w_image, 0.25, 0.75)
+		# # ==========================================
+		# # CLIPPING (ważne!)
+		# # ==========================================
+		# w_text = np.clip(w_text, 0.25, 0.75)
+		# w_image = np.clip(w_image, 0.25, 0.75)
 
-		# normalizacja po clip
-		norm = w_text + w_image
+		# # normalizacja po clip
+		# norm = w_text + w_image
 
-		w_text = w_text / norm
-		w_image = w_image / norm
+		# w_text = w_text / norm
+		# w_image = w_image / norm
 
-		# reshape do broadcastingu
-		w_text = w_text.reshape(1, -1)
-		w_image = w_image.reshape(1, -1)
+		# # reshape do broadcastingu
+		# w_text = w_text.reshape(1, -1)
+		# w_image = w_image.reshape(1, -1)
 
-		# ==========================================
-		# WEIGHTED COMBINATION
-		# ==========================================
-		combined = (
-				w_text * proba1 +
-				w_image * proba2
-		)
+		# # ==========================================
+		# # WEIGHTED COMBINATION
+		# # ==========================================
+		# combined = (
+		# 		w_text * proba1 +
+		# 		w_image * proba2
+		# )
 
-		# ==========================================
-		# THRESHOLD
-		# ==========================================
-		threshold = config.get("fusion_threshold", 0.5)
+		# # ==========================================
+		# # THRESHOLD
+		# # ==========================================
+		# threshold = config.get("fusion_threshold", 0.5)
 
-		y_weighted = (combined > threshold).astype(int)
+		# y_weighted = (combined > threshold).astype(int)
 
-		evaluations["late-fusion-weighted"] = evaluate(y_test, y_weighted)
+		# evaluations["late-fusion-weighted"] = evaluate(y_test, y_weighted)
 
-		# ==========================================
-		# DEBUG INFO
-		# ==========================================
-		print("\n[FUSION CLASS WEIGHTS]")
+		# # ==========================================
+		# # DEBUG INFO
+		# # ==========================================
+		# print("\n[FUSION CLASS WEIGHTS]")
 
-		for i in range(len(f1_text)):
-			print(
-				f"Class {i}: "
-				f"text={w_text[0][i]:.2f} | "
-				f"image={w_image[0][i]:.2f}"
-			)
+		# for i in range(len(f1_text)):
+		# 	print(
+		# 		f"Class {i}: "
+		# 		f"text={w_text[0][i]:.2f} | "
+		# 		f"image={w_image[0][i]:.2f}"
+		# 	)
 
 	return evaluations

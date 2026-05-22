@@ -75,7 +75,7 @@ def main(test_type: str) -> None:
 
     elif test_type == "late-fusion":
 
-        for mt1 in ["svm", "logistic", "random_forest", "mlp"]: # "svm", "logistic", "random_forest", "mlp"
+        for mt1 in ["random_forest", "mlp"]: # "svm", "logistic", "random_forest", "mlp"
             for mt2 in ["logistic", "random_forest", "mlp"]: # "logistic", "random_forest", "mlp"
                 for vect1 in ["distilbert"]: #"tfidf",
                     for vect2 in ["resnet50"]: # "resnet18",
@@ -130,5 +130,5 @@ def main(test_type: str) -> None:
         print(leak_df)
 
 if __name__ == "__main__":
-    test_type = "early-fusion" #  "graphics", "late-fusion", "text", "early-fusion" or "info"
+    test_type = "late-fusion" #  "graphics", "late-fusion", "text", "early-fusion" or "info"
     main(test_type)
