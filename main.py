@@ -1,10 +1,9 @@
 import pandas as pd
 from EDA import TextEDA
 from label_transform import LabelTransform
-import numpy as np
-from baselines.run_experiment import run_experiment
 from baselines.run_cv import run_cv
 from baselines.utils.save_model import save_model_info
+from baselines.grid_search import run_grid_search
 import time
 
 def main(test_type: str) -> None:
@@ -16,7 +15,7 @@ def main(test_type: str) -> None:
     df = pd.read_csv("movies.csv")
 
     # EDA - podstawowe informacje, usunięcie null
-    eda = TextEDA(df,True)
+    eda = TextEDA(df, True)
     # eda.display_dataset_basic_info()
     df = eda.drop_na()
 
@@ -75,10 +74,10 @@ def main(test_type: str) -> None:
 
     elif test_type == "late-fusion":
 
-        for mt1 in ["mlp"]: # "svm", "logistic", "random_forest", "mlp"
-            for mt2 in ["logistic", "random_forest", "mlp"]: # "logistic", "random_forest", "mlp"
-                for vect1 in ["distilbert"]: #"tfidf",
-                    for vect2 in ["resnet50"]: # "resnet18",
+        for mt1 in ["mlp"]:                                     # "svm", "logistic", "random_forest", "mlp"
+            for mt2 in ["logistic", "random_forest", "mlp"]:    # "logistic", "random_forest", "mlp"
+                for vect1 in ["distilbert"]:    # "tfidf",
+                    for vect2 in ["resnet50"]:  # "resnet18",
                         config = {
                             "type": "late-fusion",
                             "balanced_list": [True, True],
@@ -101,8 +100,8 @@ def main(test_type: str) -> None:
     elif test_type == "early-fusion":
 
         for mt1 in ["logistic", "random_forest", "mlp"]:
-            for vect1 in ["distilbert"]: #"tfidf",
-                for vect2 in ["resnet50"]: # "resnet18",
+            for vect1 in ["distilbert"]:    # "tfidf",
+                for vect2 in ["resnet50"]:  # "resnet18",
                     config = {
                         "type": "early-fusion",
                         "balanced": True,
@@ -121,14 +120,21 @@ def main(test_type: str) -> None:
                     end = time.time()
                     save_model_info(config, results, end-start)
 
+
+
+    elif test_type == "tuning":
+
+        tuning_type = "text"    # "text", "graphics", "early-fusion" or "late-fusion"
+        run_grid_search(df, y, tuning_type)
+
     elif test_type == "info":
         # Podsumowanie informacji na temat zbioru
-        eda.display_summary(y=y,y_labels=y_label,y_count=y_count)
+        eda.display_summary(y=y, y_labels=y_label, y_count=y_count)
         eda.chart_summary()
         eda.class_distribution()
         leak_df = eda.check_label_leakage(y, y_label)
         print(leak_df)
 
 if __name__ == "__main__":
-    test_type = "late-fusion" #  "graphics", "late-fusion", "text", "early-fusion" or "info"
+    test_type = "tuning"    # "graphics", "late-fusion", "text", "early-fusion", "tuning" or "info"
     main(test_type)
