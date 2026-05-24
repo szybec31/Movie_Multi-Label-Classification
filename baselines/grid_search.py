@@ -5,7 +5,7 @@ from .utils.save_model import save_model_info
 
 
 def tuning_text(df, y):
-    vectorizers = ["tfidf", "distilbert"]
+    vectorizers = ["distilbert"]
     models = [
         "logistic",
         "svm",
@@ -27,7 +27,7 @@ def tuning_text(df, y):
         "random_forest": {
             "balanced": [True, False],
             "n_estimators": [100, 200],
-            "max_depth": [10, 20]
+            "max_depth": [3, 5]
         },
 
         "mlp": {
@@ -79,7 +79,7 @@ def tuning_text(df, y):
 
 
 def tuning_graphics(df, y):
-    vectorizers = ["resnet18", "resnet50"]
+    vectorizers = ["resnet50"]
     models = [
         "logistic",
         "random_forest",
@@ -94,7 +94,8 @@ def tuning_graphics(df, y):
         "random_forest": {
             "balanced": [True, False],
             "n_estimators": [100, 200],
-            "max_depth": [10, 20]
+            "max_depth": [3, 5],
+            "max_features": ["sqrt", 0.8]
         },
 
         "mlp": {
@@ -145,8 +146,8 @@ def tuning_graphics(df, y):
 
 def tuning_early_fusion(df, y):
 
-    text_vectorizers = ["tfidf", "distilbert"]
-    image_vectorizers = ["resnet18", "resnet50"]
+    text_vectorizers = ["distilbert"]
+    image_vectorizers = ["resnet50"]
 
     models = [
         "logistic",
@@ -191,8 +192,8 @@ def tuning_early_fusion(df, y):
 
 def tuning_late_fusion(df, y):
 
-    text_vectorizers = ["tfidf", "distilbert"]
-    image_vectorizers = ["resnet18", "resnet50"]
+    text_vectorizers = ["distilbert"]
+    image_vectorizers = ["resnet50"]
 
     text_models = [
         "logistic",
