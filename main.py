@@ -6,7 +6,7 @@ from baselines.utils.save_model import save_model_info
 from baselines.grid_search import run_grid_search
 import time
 
-def main(test_type: str) -> None:
+def main(test_type: str, test_subtype: str = "text") -> None:
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', None)
     pd.set_option('display.max_rows', 20)
@@ -124,7 +124,7 @@ def main(test_type: str) -> None:
 
     elif test_type == "tuning":
 
-        tuning_type = "text"    # "text", "graphics", "early-fusion" or "late-fusion"
+        tuning_type = test_subtype
         run_grid_search(df, y, tuning_type)
 
     elif test_type == "info":
@@ -137,4 +137,5 @@ def main(test_type: str) -> None:
 
 if __name__ == "__main__":
     test_type = "tuning"    # "graphics", "late-fusion", "text", "early-fusion", "tuning" or "info"
-    main(test_type)
+    test_subtype = "text" # for "tuning" test_type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
+    main(test_type, test_subtype)

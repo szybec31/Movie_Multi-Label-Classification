@@ -14,3 +14,4 @@ pyinstaller
 torch
 torchvision 
 pillow
+iterative-stratification

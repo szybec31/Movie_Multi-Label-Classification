@@ -1,9 +1,7 @@
 import pandas as pd
 import os
 
-def save_model_info(config, results, elapsed_time, add: str = ""):
-
-    file_path = "results.csv"
+def save_model_info(config, results, elapsed_time, add: str = "", file_path: str = "results.csv"):
 
     rows = []
 
