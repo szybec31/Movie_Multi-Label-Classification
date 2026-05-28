@@ -37,17 +37,14 @@ class DistilBERTEmbedder:
 
         return np.vstack(embeddings)
 
-def build_distilbert_embedding(X,split):
-    EMB_PATH = "cache/bert_embeddings.npy"     #"bert_embeddings.npy"
+def build_distilbert_embedding(X, split=None):
+    EMB_PATH = "cache/bert_embeddings.npy"
 
-
-    # sprawdzenie czy plik istnieje
     if os.path.exists(EMB_PATH):
         print("Wczytywanie embeddingów z pliku...")
         X_bert = np.load(EMB_PATH)
 
     else:
-
         print("Generowanie embeddingów BERT...")
         embedder = DistilBERTEmbedder()
 
@@ -59,8 +56,15 @@ def build_distilbert_embedding(X,split):
         print("Zapisywanie embeddingów...")
         np.save(EMB_PATH, X_bert)
 
-    print("DistilBERTEmbedder Ilość cech: ",X_bert.shape[1])
-    train_idx, test_idx = split
-    X_train, X_test = X_bert[train_idx], X_bert[test_idx]
+    print("DistilBERTEmbedder Ilość cech:", X_bert.shape[1])
 
-    return X_train,X_test
+    # FULL DATASET
+    if split is None:
+        return X_bert, None
+
+    train_idx, test_idx = split
+
+    X_train = X_bert[train_idx]
+    X_test = X_bert[test_idx]
+
+    return X_train, X_test
