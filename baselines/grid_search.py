@@ -380,13 +380,12 @@ def tuning_early_fusion(df_o, y_o):
                 )
 
                 end = time.time()
-                save_model_info(
-                    config,
-                    results,
-                    end - start,
-                    add=f"Tuning | {params}",
-                    file_path="tuning_early_fusion.csv"
+                add = (
+                    f"Tuning | "
+                    f"{params}"
                 )
+
+                save_model_info(config, results, end - start, add=add, file_path="tuning.csv")
 
                 metrics = get_mean_metrics(results)
                 score = metrics["f1_macro"]
@@ -428,7 +427,7 @@ def tuning_early_fusion(df_o, y_o):
                 final_results,
                 end - start,
                 add=f"FINAL_TOP_{i+1} | {result['params']}",
-                file_path="tuning_early_fusion_final.csv"
+                file_path="tuning_final.csv"
             )
 
 
