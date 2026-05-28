@@ -7,7 +7,7 @@ from .utils.get_subset import get_subset
 TUNING_CV = 3   # Quick CV for tuning
 TOP_K = 3   # Number of best param combination per model
 FINAL_CV = 10   # Final CV (work on TOP_K number of param)
-FRAC = 1.0  # 20% of dataset
+FRAC = 0.2  # 20% of the dataset
 
 def get_mean_metrics(results, subtype="none"):
 
