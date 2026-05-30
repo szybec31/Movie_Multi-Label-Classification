@@ -177,6 +177,6 @@ def main(test_type: str, test_subtype: str = "text") -> None:
         print(leak_df)
 
 if __name__ == "__main__":
-    test_type = "text"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
-    test_subtype = "text"   # for "tuning" test_type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
+    test_type = "freeze"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
+    test_subtype = "early-fusion" # for "tuning" test_type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
     main(test_type, test_subtype)

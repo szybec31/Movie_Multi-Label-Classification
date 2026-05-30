@@ -4,10 +4,10 @@ from .run_cv import run_cv
 from .utils.save_model import save_model_info
 from .utils.get_subset import get_subset
 
-TUNING_CV = 3 # Quick CV for tuning
-TOP_K = 3 # Number of best param combination per model
-FINAL_CV = 10 # Final CV (work on TOP_K number of param)
-FRAC = 0.2 # 10% of dataset
+TUNING_CV = 3   # Quick CV for tuning
+TOP_K = 3   # Number of best param combination per model
+FINAL_CV = 10   # Final CV (work on TOP_K number of param)
+FRAC = 0.2  # 100% of dataset
 
 def get_mean_metrics(results, subtype="none"):
 
@@ -193,7 +193,9 @@ def tuning_text(df_o, y_o):
 
 def tuning_graphics(df_o, y_o):
 
-    df, y = get_subset(df_o, y_o, FRAC)
+    # df, y = get_subset(df_o, y_o, FRAC)
+    df = df_o
+    y = y_o
 
     best_results = {
         "logistic": [],
@@ -313,10 +315,18 @@ def tuning_graphics(df_o, y_o):
             )
 
 
-def tuning_early_fusion(df, y):
-    best_results = {}
-    text_vectorizers = ["distilbert"]
-    image_vectorizers = ["resnet50"]
+def tuning_early_fusion(df_o, y_o):
+    df = df_o
+    y = y_o
+
+    best_results = {
+        "logistic": [],
+        "random_forest": [],
+        "mlp": []
+    }
+    vectorizers = [
+        ["distilbert", "resnet50"]
+    ]
 
     models = [
         "logistic",
@@ -324,38 +334,106 @@ def tuning_early_fusion(df, y):
         "mlp"
     ]
 
-    for text_vect in text_vectorizers:
-        for image_vect in image_vectorizers:
-            for model in models:
+    param_grids = {
+        "logistic": {
+            "balanced": [True, False],
+            "threshold": [0.2, 0.3, 0.4, 0.5]
+        },
+        "random_forest": {
+            "balanced": [True, False],
+            "n_estimators": [100, 200],
+            "max_depth": [3, 5],
+            "max_features_rf": ["sqrt", 0.8]
+        },
+        "mlp": {
+            "hidden_layer_sizes": [
+                (512, 256),
+                (256, 128)
+            ],
+            "learning_rate_init": [
+                0.001,
+                0.0005
+            ],
+            "batch_size": [32, 64],
+            "max_iter": [40, 80]
+        }
+    }
 
+    for vects in vectorizers:
+        for model in models:
+            grid = param_grids[model]
+            keys = list(grid.keys())
+            values = list(grid.values())
+
+            for combo in product(*values):
+                params = dict(zip(keys, combo))
                 config = {
                     "type": "early-fusion",
-                    "vectorizers": [
-                        text_vect,
-                        image_vect
-                    ],
+                    "vectorizers": vects,
                     "models": [model],
-                    "balanced": True,
-                    "max_features_tfidf": 20000,
-                    "max_iter": 40,
-                    "learning_rate_init": 0.001,
-                    "max_depth": 20
+                    **params
                 }
-
                 print("=" * 80)
                 print(config)
 
                 start = time.time()
-                results = run_cv(df, y, 10, **config)
+                results = run_cv(
+                    df,
+                    y,
+                    TUNING_CV,
+                    **config
+                )
 
                 end = time.time()
                 add = (
-                    f"Tuning early-fusion | "
-                    f"{text_vect}+{image_vect} | "
-                    f"{model}"
+                    f"Tuning | "
+                    f"{params}"
                 )
 
-                save_model_info(config, results, end - start, add=add)
+                save_model_info(config, results, end - start, add=add, file_path="tuning.csv")
+
+                metrics = get_mean_metrics(results)
+                score = metrics["f1_macro"]
+                candidate = {
+                    "score": score,
+                    "config": config,
+                    "params": params,
+                    "metrics": metrics
+                }
+
+                best_results[model].append(candidate)
+                best_results[model] = sorted(
+                    best_results[model],
+                    key=lambda x: x["score"],
+                    reverse=True
+                )[:TOP_K]
+
+    print("\n\nFinal best results:\n")
+
+    for model_name, candidates in best_results.items():
+        print(f"\nFINAL TRAINING FOR: {model_name}")
+
+        for i, result in enumerate(candidates):
+            print(f"\nTOP {i+1}/{TOP_K}")
+            print_best_result(result, model_name)
+            config = result["config"]
+            start = time.time()
+
+            final_results = run_cv(
+                df_o,
+                y_o,
+                FINAL_CV,
+                **config
+            )
+
+            end = time.time()
+            save_model_info(
+                config,
+                final_results,
+                end - start,
+                add=f"FINAL_TOP_{i+1} | {result['params']}",
+                file_path="tuning_final.csv"
+            )
 
 
 
