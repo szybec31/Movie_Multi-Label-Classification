@@ -4,6 +4,7 @@ from label_transform import LabelTransform
 from baselines.run_cv import run_cv
 from baselines.utils.save_model import save_model_info
 from baselines.grid_search import run_grid_search
+from baselines.freeze_models import freeze_model
 import time
 
 def main(test_type: str, test_subtype: str = "text") -> None:
@@ -120,12 +121,52 @@ def main(test_type: str, test_subtype: str = "text") -> None:
                     end = time.time()
                     save_model_info(config, results, end-start)
 
-
-
     elif test_type == "tuning":
 
         tuning_type = test_subtype
         run_grid_search(df, y, tuning_type)
+
+    elif test_type == "freeze":
+
+        type = "text"
+        vectorizer = ["distilbert"]
+        configs = [
+            {
+                "type": type,
+                "vectorizers": vectorizer,
+                "models": ["logistic"],
+                "balanced": False,
+                "threshold": 0.3
+            },
+            {
+                "type": type,
+                "vectorizers": vectorizer,
+                "models": ["svm"],
+                "balanced": True,
+                "max_iter_svm": 5000
+            },
+            {
+                "type": type,
+                "vectorizers": vectorizer,
+                "models": ["random_forest"],
+                "balanced": True,
+                "n_estimators": 200,
+                "max_depth": 5,
+                "max_features_rf": "sqrt"
+            },
+            {
+                "type": type,
+                "vectorizers": vectorizer,
+                "models": ["mlp"],
+                "hidden_layer_sizes": (256, 128),
+                "learning_rate_init": 0.001,
+                "batch_size": 64,
+                "max_iter": 80
+            }
+        ]
+
+        for config in configs:
+            freeze_model(df, y, config)
 
     elif test_type == "info":
         # Podsumowanie informacji na temat zbioru
@@ -136,6 +177,6 @@ def main(test_type: str, test_subtype: str = "text") -> None:
         print(leak_df)
 
 if __name__ == "__main__":
-    test_type = "tuning"    # "graphics", "late-fusion", "text", "early-fusion", "tuning" or "info"
+    test_type = "freeze"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
     test_subtype = "early-fusion" # for "tuning" test_type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
     main(test_type, test_subtype)
