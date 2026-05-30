@@ -129,13 +129,14 @@ def main(test_type: str, test_subtype: str = "text") -> None:
 
     elif test_type == "freeze":
 
-        freeze_type = "text"
-        configs = freeze_configs(freeze_type)
+        freeze_types = ["text", "graphics", "early-fusion"]
+        for f_type in freeze_types:
+            configs = freeze_configs(f_type)
 
-        # Files for frozen models are invisible in PyCharm due to its lack of support for .pkl extension, but those
-        # files are indeed there if you look for them in file explorer
-        for config in configs:
-            freeze_model(df, y, config)
+            # Files for frozen models are invisible in PyCharm due to its lack of support for .pkl extension, but those
+            # files are indeed there if you look for them in file explorer
+            for config in configs:
+                freeze_model(df, y, config, mlb=lt.mlb)
 
     elif test_type == "info":
         # Podsumowanie informacji na temat zbioru
@@ -146,6 +147,6 @@ def main(test_type: str, test_subtype: str = "text") -> None:
         print(leak_df)
 
 if __name__ == "__main__":
-    test_type = "freeze"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
+    test_type = "info"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
     test_subtype = "early-fusion"   # for "tuning" test_type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
     main(test_type, test_subtype)

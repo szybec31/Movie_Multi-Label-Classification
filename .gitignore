@@ -10,4 +10,3 @@ app/build/
 app/dist/
 cache/resnet50.npy
 results/
-frozen_models/

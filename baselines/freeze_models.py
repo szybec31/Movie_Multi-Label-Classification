@@ -12,6 +12,7 @@ from .features.resnet50 import build_image_features as build_resnet50
 from .features.resnet18 import build_image_features as build_resnet18
 
 SAVE_DIR = "frozen_models"
+
 def ensure_dir():
     os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -40,11 +41,9 @@ def train_single_model(X, y, model_name, config, idx=0):
 
 
 def build_features(df, config):
-
     features = []
     vectorizers = []
     if config["type"] in ["text", "early-fusion", "late-fusion"]:
-
         text_data = (df["title"].fillna("") + " " + df["overview"].fillna(""))
         vec = config["vectorizers"][0]
 
@@ -89,7 +88,6 @@ def build_features(df, config):
 
 
 def get_base_filename(config):
-
     model_names = "_".join(config["models"])
     vectorizer_names = "_".join(config["vectorizers"])
 
@@ -100,7 +98,7 @@ def get_base_filename(config):
     )
 
 
-def freeze_model(df, y, config):
+def freeze_model(df, y, config, mlb=None):
     print("FREEZING MODEL")
     print(config)
 
@@ -120,13 +118,15 @@ def freeze_model(df, y, config):
 
         save_data = {
             "model": model,
+            "vectorizers": vectorizers,
+            "mlb": mlb,
             "config": config,
             "threshold": config.get("threshold", 0.5)
         }
 
         joblib.dump(
             save_data,
-            os.path.join(SAVE_DIR, f"{base_name}_model.pkl")
+            os.path.join(SAVE_DIR, f"{base_name}.pkl")
         )
 
     elif config["type"] == "early-fusion":
@@ -140,15 +140,16 @@ def freeze_model(df, y, config):
 
         save_data = {
             "model": model,
+            "vectorizers": vectorizers,
+            "mlb": mlb,
             "config": config,
             "threshold": config.get("threshold", 0.5)
         }
 
         joblib.dump(
             save_data,
-            os.path.join(SAVE_DIR, f"{base_name}_model.pkl")
+            os.path.join(SAVE_DIR, f"{base_name}.pkl")
         )
-
 
     elif config["type"] == "late-fusion":
         models = []
@@ -160,29 +161,19 @@ def freeze_model(df, y, config):
                 config,
                 idx=i
             )
-
             models.append(model)
 
         save_data = {
             "models": models,
+            "vectorizers": vectorizers,
+            "mlb": mlb,
             "config": config,
             "thresholds": config.get("thresholds", [0.5, 0.5])
         }
 
         joblib.dump(
             save_data,
-            os.path.join(SAVE_DIR, f"{base_name}_model.pkl")
+            os.path.join(SAVE_DIR, f"{base_name}.pkl")
         )
 
-
-    for i, vectorizer in enumerate(vectorizers):
-        if vectorizer is not None:
-            joblib.dump(
-                vectorizer,
-                os.path.join(
-                    SAVE_DIR,
-                    f"{base_name}_vectorizer_{i}.pkl"
-                )
-            )
-
-    print(f"\nSaved model to: {SAVE_DIR}\n")
+    print(f"\nSaved model bundle to: {SAVE_DIR}\n")

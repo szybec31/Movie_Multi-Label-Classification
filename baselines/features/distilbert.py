@@ -1,5 +1,3 @@
-# features/distilbert.py
-
 from transformers import AutoTokenizer, AutoModel
 import torch
 import numpy as np
@@ -19,7 +17,7 @@ class DistilBERTEmbedder:
         embeddings = []
 
         for i in tqdm(range(0, len(texts), batch_size)):
-            batch = texts[i:i+batch_size]
+            batch = texts[i:i + batch_size]
 
             inputs = self.tokenizer(
                 list(batch),
@@ -36,6 +34,16 @@ class DistilBERTEmbedder:
             embeddings.append(cls_emb.cpu().numpy())
 
         return np.vstack(embeddings)
+
+
+def extract_single(text, embedder=None):
+    # Ekstrakcja embeddingu BERT dla pojedynczego tekstu wpisanego w PyQt
+    if embedder is None:
+        embedder = DistilBERTEmbedder()
+
+    feat = embedder.encode([text], batch_size=1)
+    return feat[0]
+
 
 def build_distilbert_embedding(X, split=None):
     EMB_PATH = "cache/bert_embeddings.npy"
