@@ -7,7 +7,7 @@ from .utils.get_subset import get_subset
 TUNING_CV = 3   # Quick CV for tuning
 TOP_K = 3   # Number of best param combination per model
 FINAL_CV = 10   # Final CV (work on TOP_K number of param)
-FRAC = 0.2  # 20% of the dataset
+FRAC = 0.2  # 100% of dataset
 
 def get_mean_metrics(results, subtype="none"):
 
@@ -193,7 +193,9 @@ def tuning_text(df_o, y_o):
 
 def tuning_graphics(df_o, y_o):
 
-    df, y = get_subset(df_o, y_o, FRAC)
+    # df, y = get_subset(df_o, y_o, FRAC)
+    df = df_o
+    y = y_o
 
     best_results = {
         "logistic": [],
@@ -314,7 +316,8 @@ def tuning_graphics(df_o, y_o):
 
 
 def tuning_early_fusion(df_o, y_o):
-    df, y = get_subset(df_o, y_o, FRAC)
+    df = df_o
+    y = y_o
 
     best_results = {
         "logistic": [],
@@ -334,12 +337,13 @@ def tuning_early_fusion(df_o, y_o):
     param_grids = {
         "logistic": {
             "balanced": [True, False],
-            "threshold": [0.3, 0.5]
+            "threshold": [0.2, 0.3, 0.4, 0.5]
         },
         "random_forest": {
-            "balanced": [True],
-            "n_estimators": [100],
-            "max_depth": [5, 10]
+            "balanced": [True, False],
+            "n_estimators": [100, 200],
+            "max_depth": [3, 5],
+            "max_features_rf": ["sqrt", 0.8]
         },
         "mlp": {
             "hidden_layer_sizes": [
@@ -347,10 +351,11 @@ def tuning_early_fusion(df_o, y_o):
                 (256, 128)
             ],
             "learning_rate_init": [
-                0.001
+                0.001,
+                0.0005
             ],
-            "batch_size": [64],
-            "max_iter": [40]
+            "batch_size": [32, 64],
+            "max_iter": [40, 80]
         }
     }
 
