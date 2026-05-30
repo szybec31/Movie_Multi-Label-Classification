@@ -1,6 +1,5 @@
 import os
 import joblib
-import json
 import numpy as np
 from .utils.remake_config import clean_model_config
 from .models.logistic import train_logistic
@@ -46,8 +45,7 @@ def build_features(df, config):
     vectorizers = []
     if config["type"] in ["text", "early-fusion", "late-fusion"]:
 
-        df["text"] = (df["title"].fillna("") + " " + df["overview"].fillna(""))
-        text_data = df["text"]
+        text_data = (df["title"].fillna("") + " " + df["overview"].fillna(""))
         vec = config["vectorizers"][0]
 
         if vec == "tfidf":
@@ -131,9 +129,6 @@ def freeze_model(df, y, config):
             os.path.join(SAVE_DIR, f"{base_name}_model.pkl")
         )
 
-        with open(os.path.join(SAVE_DIR, f"config_{config["models"][2:-3]}.json"), "w") as f:
-            json.dump(config, f, indent=4)
-
     elif config["type"] == "early-fusion":
         X = np.hstack(features)
         model = train_single_model(
@@ -154,8 +149,6 @@ def freeze_model(df, y, config):
             os.path.join(SAVE_DIR, f"{base_name}_model.pkl")
         )
 
-        with open(os.path.join(SAVE_DIR, f"config_{model}.json"), "w") as f:
-            json.dump(config, f, indent=4)
 
     elif config["type"] == "late-fusion":
         models = []
@@ -181,14 +174,15 @@ def freeze_model(df, y, config):
             os.path.join(SAVE_DIR, f"{base_name}_model.pkl")
         )
 
-        with open(os.path.join(SAVE_DIR, f"config_{model}.json"), "w") as f:
-            json.dump(config, f, indent=4)
 
     for i, vectorizer in enumerate(vectorizers):
         if vectorizer is not None:
             joblib.dump(
                 vectorizer,
-                os.path.join(SAVE_DIR, f"vectorizer_{i}.pkl")
+                os.path.join(
+                    SAVE_DIR,
+                    f"{base_name}_vectorizer_{i}.pkl"
+                )
             )
 
     print(f"\nSaved model to: {SAVE_DIR}\n")
