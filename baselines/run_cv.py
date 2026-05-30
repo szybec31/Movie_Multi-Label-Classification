@@ -1,13 +1,12 @@
 from .run_experiment import run_experiment
-from sklearn.model_selection import StratifiedKFold
 import numpy as np
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
 def run_cv(df, y, n_splits=10, **config):
 
     X = df["title"]
-    y_strat = y.sum(axis=1)
 
-    skf = StratifiedKFold(
+    mskf = MultilabelStratifiedKFold(
         n_splits=n_splits,
         shuffle=True,
         random_state=42
@@ -15,7 +14,7 @@ def run_cv(df, y, n_splits=10, **config):
 
     all_results = {}
 
-    for fold, (train_idx, test_idx) in enumerate(skf.split(X, y_strat)):
+    for fold, (train_idx, test_idx) in enumerate(mskf.split(X, y)):
 
         print(f"Fold {fold+1}/{n_splits}")
 
