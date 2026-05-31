@@ -2,7 +2,9 @@ from .run_experiment import run_experiment
 import numpy as np
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
-def run_cv(df, y, n_splits=10, **config):
+def run_cv(df, y, **config):
+
+    n_splits = config.get("outer_cv", 10)
 
     X = df["title"]
 

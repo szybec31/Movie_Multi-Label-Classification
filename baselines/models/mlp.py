@@ -1,6 +1,6 @@
 from sklearn.neural_network import MLPClassifier
 
-def train_mlp(X_train, y_train, **config):
+def get_mlp(**config):
     model = MLPClassifier(
         hidden_layer_sizes=config["hidden_layer_sizes"] if "hidden_layer_sizes" in config else (256, 128),
         activation='relu',
@@ -11,6 +11,11 @@ def train_mlp(X_train, y_train, **config):
         early_stopping=True,
         random_state=42
     )
+
+    return model
+
+def train_mlp(X_train, y_train, **config):
+    model = get_mlp(**config)
 
     model.fit(X_train, y_train)
     return model
