@@ -1,33 +1,35 @@
 import torch
 print("TORCH OK")
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QStackedWidget, QPushButton, QHBoxLayout,QListWidget, QFrame)
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QStackedWidget, QPushButton, QHBoxLayout,
+                             QListWidget, QFrame)
 from PyQt5.QtCore import Qt
+from app_predict import MoviePredictor
 from styles import get_dark_style
 from step1 import Step1
 from step2 import Step2
 from step3 import Step3
-
 from app.models.text_vectorizer import TextVectorizer
 from app.models.image_vectorizer import ImageVectorizer
 import sys
+import os
+
 
 class AppState:
     def __init__(self):
         self.sources = {
             "text": False,
             "image": False,
-            "audio_video": False,
         }
 
         self.data = {
             "title": "",
             "description": "",
             "image_path": "",
-            "audio_video_path": "",
         }
         self.method = None
         self.predict = []
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -35,7 +37,7 @@ class MainWindow(QWidget):
 
         self.text_vectorizer = TextVectorizer()
         if not self.text_vectorizer.ready:
-            self.main.show_error(
+            self.show_error(
                 "Model not loaded. Check internet connection. Model needs connection only at first run."
             )
         self.image_vectorizer = ImageVectorizer()
@@ -51,6 +53,17 @@ class MainWindow(QWidget):
         self.resize(680, 680)
         self.setMinimumSize(680, 680)
         self.setMaximumSize(680, 680)
+
+        # =========================
+        # INICJALIZACJA MODELI PREDYKCJI
+        # =========================
+        try:
+            self.predictor_text = MoviePredictor("text")
+            self.predictor_graphics = MoviePredictor("graphics")
+            self.predictor_fusion = MoviePredictor("early-fusion")
+            print("Wszystkie modele produkcyjne (.pkl) zostały załadowane pomyślnie!")
+        except Exception as e:
+            print(f"Ostrzeżenie przy ładowaniu modeli pkl: {e}")
 
         # =========================
         # LEWA STRONA (kategorie)
@@ -164,6 +177,26 @@ class MainWindow(QWidget):
         self.stack.setCurrentIndex(2)
 
     # =========================
+    # LOGIKA REALNEJ PREDYKCJI
+    # =========================
+    def run_real_prediction(self):
+        """Uruchamia właściwy model produkcyjny i zwraca listę gatunków"""
+        has_text = self.state.sources.get("text", False)
+        has_image = self.state.sources.get("image", False)
+
+        title = self.state.data.get("title", "")
+        description = self.state.data.get("description", "")
+        image_path = self.state.data.get("image_path", "")
+
+        if has_text and has_image:
+            return self.predictor_fusion.predict(title=title, overview=description, image_path=image_path)
+        elif has_text:
+            return self.predictor_text.predict(title=title, overview=description)
+        elif has_image:
+            return self.predictor_graphics.predict(image_path=image_path)
+        return []
+
+    # =========================
     # OUTPUT
     # =========================
     def show_error(self, msg):
@@ -184,41 +217,35 @@ class MainWindow(QWidget):
         self.show_result("Movie classifier – demo")
 
     def reset_app(self):
-
         self.state.sources = {
             "text": False,
             "image": False,
-            "audio_video": False
         }
         self.state.data = {
             "title": "",
             "description": "",
             "image_path": "",
-            "audio_video_path": "",
         }
         self.state.method = None
 
         self.step1.title_cb.setChecked(False)
         self.step1.image_cb.setChecked(False)
-        self.step1.aud_vid_cb.setChecked(False)
 
         self.step2.title_input.clear()
         self.step2.desc_input.clear()
         self.step2.image_label.setText("Image:")
-        self.step2.audio_video_label.setText("Audio-Video:")
 
         self.clear_output()
         self.go_step1()
 
-import os, sys
+
 def resource_path(relative_path):
-    # PyInstaller
     if hasattr(sys, "_MEIPASS"):
         base = sys._MEIPASS
     else:
         base = os.path.abspath(".")
-
     return os.path.join(base, relative_path)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
