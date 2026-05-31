@@ -37,4 +37,14 @@ def run_cv(df, y, n_splits=10, **config):
 
             all_results[model_name].append(row)
 
+    for model_name in all_results:
+        print(f" ------- Info {model_name}: ------- ")
+        for metric_name in all_results[model_name][0]:
+            if metric_name == "fold":
+                continue
+            metric = []
+            for fold in all_results[model_name]:
+                metric.append(fold[metric_name])
+            print(f"{metric_name}: {np.mean(metric):.3f}")
+
     return all_results

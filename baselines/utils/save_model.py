@@ -19,6 +19,7 @@ def save_model_info(config, results, elapsed_time, add: str = "", file_path: str
                 "model2": str(config["models"][1]) if len(config["models"]) == 2 else None,
                 "fold": fold_result["fold"],
                 "time": elapsed_time,
+                "best_threshold": fold_result.get("best_threshold", None),
             }
 
             row.update(fold_result)

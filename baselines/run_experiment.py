@@ -57,8 +57,6 @@ def run_experiment(df, y, split=None, **config):
         config["thresholds"] = []
         if "threshold" in config:
             config["thresholds"] = [config["threshold"]]
-        else:
-            config["thresholds"] = [None, None]
 
     if "balanced_list" not in config:
         if "balanced" in config:
@@ -91,13 +89,13 @@ def run_experiment(df, y, split=None, **config):
         X_list.append(X1)
 
     if config["type"] == "graphics":
-        if config["vectorizers"][0] not in ["resnet18", "resnet50"]:
+        if config["vectorizers"][0] not in ["resnet18", "resnet50", "clip", "dino"]:
             raise ValueError("Wrong vectorizer to chosen type; choose resnet18 or resnet50")
         X1 = df["poster_path"]
         X_list.append(X1)
 
     if config["type"] in ["early-fusion", "late-fusion"]:
-        if config["vectorizers"][1] not in ["resnet18", "resnet50"]:
+        if config["vectorizers"][1] not in ["resnet18", "resnet50", "clip", "dino"]:
             raise ValueError("Wrong vectorizer to chosen type; choose resnet18 or resnet50")
         X2 = df["poster_path"]
         X_list.append(X2)
@@ -144,6 +142,11 @@ def run_experiment(df, y, split=None, **config):
             from .features.resnet18 import build_image_features
             Xt, Xv, _ = build_image_features(df, (train_idx, test_idx))
 
+        elif vec == "dino":
+            from .features.dino import build_image_features
+
+            Xt, Xv, _ = build_image_features(df,(train_idx, test_idx))
+
         else:
             raise ValueError("Unknown vectorizer")
 
@@ -173,13 +176,14 @@ def run_experiment(df, y, split=None, **config):
     # ========================
     # MODELS AND PREDICTIONS
     # ========================
-
     preds = []
     probas = []
     evaluations = {}
+    y_preds = []
 
     for i, model_name in enumerate(config["models"]):
-
+        best_threshold = 0.0
+        thresholds = config.get("thresholds", [])
         Xtr = features_train[i]
         Xte = features_test[i]
 
@@ -187,9 +191,53 @@ def run_experiment(df, y, split=None, **config):
             from .models.logistic import train_logistic
             model = train_logistic(Xtr, y_train, config["balanced_list"][i])
 
-            threshold = config["thresholds"][i] or 0.5
-            y_proba = model.predict_proba(Xte)
+            #print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
+            y_proba = get_positive_proba(model, Xte)
+            if len(thresholds) > 0:
+                for threshold in thresholds:
+                    y_pred = (
+                            y_proba > (threshold)
+                    ).astype(int)
+                    y_preds.append(y_pred)
+                    print("predict sum:", y_pred.sum())
+            else:
+                train_proba = get_positive_proba(model, Xtr)
+
+                best_threshold, train_f1 = find_best_threshold(
+                    y_train,
+                    train_proba
+                )
+                y_pred = (
+                        y_proba > (best_threshold)
+                ).astype(int)
+                print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
+                y_preds.append(y_pred)
+
+                print("shape:", y_proba.shape)
+                print("min:", y_proba.min())
+                print("max:", y_proba.max())
+                print("mean:", y_proba.mean())
+                print("pred labels:", (y_proba > best_threshold).sum())
+                print("true labels:", y_test.sum())
+                print("predict sum:", y_pred.sum())
+                print("true sum:", y_test.sum())
+
+            '''
+            #threshold = config["thresholds"][i] or 0.5
+            #y_pred = (y_proba > threshold).astype(int)
+
+
+            y_proba = get_positive_proba(model, Xte)
+            print("shape:", y_proba.shape)
+            print("min:", y_proba.min())
+            print("max:", y_proba.max())
+            print("mean:", y_proba.mean())
+            print("pred labels:", (y_proba > threshold).sum())
+            print("true labels:", y_test.sum())
             y_pred = (y_proba > threshold).astype(int)
+            print("predict sum:", y_pred.sum())
+            print("true sum:", y_test.sum())
+            '''
 
         elif model_name == "svm":
             from .models.svm import train_svm
@@ -202,20 +250,89 @@ def run_experiment(df, y, split=None, **config):
             print(f"Balanced: {config["balanced_list"][i]}")
             model = train_random_forest(Xtr, y_train, balanced=config["balanced_list"][i],
                                         **clean_model_config(config, ["balanced"]))
-            y_pred = model.predict(Xte)
-            y_proba = model.predict_proba(Xte)
+            #y_pred = model.predict(Xte)
+            #y_proba = model.predict_proba(Xte)
+
+            # print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
+            y_proba = get_positive_proba(model, Xte)
+            if len(thresholds) > 0:
+                for threshold in thresholds:
+                    y_pred = (
+                            y_proba > (threshold)
+                    ).astype(int)
+                    y_preds.append(y_pred)
+                    print("predict sum:", y_pred.sum())
+            else:
+                train_proba = get_positive_proba(model, Xtr)
+
+                best_threshold, train_f1 = find_best_threshold(
+                    y_train,
+                    train_proba
+                )
+                print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
+                y_pred = (
+                        y_proba > (best_threshold)
+                ).astype(int)
+                y_preds.append(y_pred)
+
+                print("shape:", y_proba.shape)
+                print("min:", y_proba.min())
+                print("max:", y_proba.max())
+                print("mean:", y_proba.mean())
+                print("pred labels:", (y_proba > best_threshold).sum())
+                print("true labels:", y_test.sum())
+                print("predict sum:", y_pred.sum())
+                print("true sum:", y_test.sum())
 
         elif model_name == "mlp":
             from .models.mlp import train_mlp
             model = train_mlp(Xtr, y_train, **config)
-            y_pred = model.predict(Xte)
-            y_proba = model.predict_proba(Xte)
+            #y_pred = model.predict(Xte)
+            #y_proba = model.predict_proba(Xte)
+
+            # print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
+            y_proba = get_positive_proba(model, Xte)
+            if len(thresholds) > 0:
+                for threshold in thresholds:
+                    y_pred = (
+                            y_proba > (threshold)
+                    ).astype(int)
+                    y_preds.append(y_pred)
+                    print("predict sum:", y_pred.sum())
+            else:
+                train_proba = get_positive_proba(model, Xtr)
+
+                best_threshold, train_f1 = find_best_threshold(
+                    y_train,
+                    train_proba
+                )
+                print(f"Best threshold={best_threshold:.2f} (train macro-F1={train_f1:.4f})")
+                y_pred = (
+                        y_proba > (best_threshold)
+                ).astype(int)
+                y_preds.append(y_pred)
+
+                print("shape:", y_proba.shape)
+                print("min:", y_proba.min())
+                print("max:", y_proba.max())
+                print("mean:", y_proba.mean())
+                print("pred labels:", (y_proba > best_threshold).sum())
+                print("true labels:", y_test.sum())
+                print("predict sum:", y_pred.sum())
+                print("true sum:", y_test.sum())
+
 
         else:
             raise ValueError("Unknown model")
 
         if len(config["models"]) == 1:
-            evaluations["none"] = evaluate(y_test, y_pred)
+            for i, yps in enumerate(y_preds):
+                dictio = evaluate(y_test, yps)
+                dictio["predict sum"] = yps.sum()
+                dictio["true sum"] = y_test.sum()
+                dictio["best_threshold"] = best_threshold if best_threshold > 0.0 else thresholds[i] if len(thresholds) > i else 0.0
+                #print("thresholds: ", i, thresholds[i])
+                evaluations[f"none_{thresholds[i] if len(thresholds) > i else ""}"] = dictio
         preds.append(y_pred)
         probas.append(y_proba)
 
@@ -238,125 +355,46 @@ def run_experiment(df, y, split=None, **config):
         evaluations["late-fusion-and"] = evaluate(y_test, y_and)
         evaluations["late-fusion-avg"] = evaluate(y_test, y_avg)
 
-    # # ==========================================
-    # # PER-CLASS WEIGHTED FUSION
-    # # ==========================================
-
-    # # predykcje train potrzebne do wyliczenia jakości klas
-    # train_preds = []
-
-    # for i, model_name in enumerate(config["models"]):
-
-    # 	Xtr = features_train[i]
-
-    # 	if model_name == "logistic":
-    # 		from .models.logistic import train_logistic
-
-    # 		model = train_logistic(
-    # 			Xtr,
-    # 			y_train,
-    # 			config["balanced_list"][i]
-    # 		)
-
-    # 		threshold = config.get("thresholds", [0.5, 0.5])[i] or 0.5
-
-    # 		proba_train = model.predict_proba(Xtr)
-    # 		pred_train = (proba_train > threshold).astype(int)
-
-    # 	elif model_name == "random_forest":
-    # 		from .models.randomforest import train_random_forest
-
-    # 		model = train_random_forest(
-    # 			Xtr,
-    # 			y_train,
-    # 			balanced=config["balanced_list"][i],
-    # 			**clean_model_config(config, ["balanced"])
-    # 		)
-
-    # 		pred_train = model.predict(Xtr)
-
-    # 	elif model_name == "mlp":
-    # 		from .models.mlp import train_mlp
-
-    # 		model = train_mlp(Xtr, y_train, **config)
-
-    # 		pred_train = model.predict(Xtr)
-
-    # 	else:
-    # 		pred_train = preds[i]
-
-    # 	train_preds.append(pred_train)
-
-    # pred1_train, pred2_train = train_preds
-
-    # # ==========================================
-    # # F1 PER CLASS
-    # # ==========================================
-    # f1_text = f1_score(
-    # 	y_train,
-    # 	pred1_train,
-    # 	average=None,
-    # 	zero_division=0
-    # )
-
-    # f1_image = f1_score(
-    # 	y_train,
-    # 	pred2_train,
-    # 	average=None,
-    # 	zero_division=0
-    # )
-
-    # # ==========================================
-    # # STABLE WEIGHTS
-    # # ==========================================
-    # eps = 1e-6
-
-    # w_text = (f1_text + eps) / (f1_text + f1_image + eps)
-    # w_image = (f1_image + eps) / (f1_text + f1_image + eps)
-
-    # # ==========================================
-    # # CLIPPING (ważne!)
-    # # ==========================================
-    # w_text = np.clip(w_text, 0.25, 0.75)
-    # w_image = np.clip(w_image, 0.25, 0.75)
-
-    # # normalizacja po clip
-    # norm = w_text + w_image
-
-    # w_text = w_text / norm
-    # w_image = w_image / norm
-
-    # # reshape do broadcastingu
-    # w_text = w_text.reshape(1, -1)
-    # w_image = w_image.reshape(1, -1)
-
-    # # ==========================================
-    # # WEIGHTED COMBINATION
-    # # ==========================================
-    # combined = (
-    # 		w_text * proba1 +
-    # 		w_image * proba2
-    # )
-
-    # # ==========================================
-    # # THRESHOLD
-    # # ==========================================
-    # threshold = config.get("fusion_threshold", 0.5)
-
-    # y_weighted = (combined > threshold).astype(int)
-
-    # evaluations["late-fusion-weighted"] = evaluate(y_test, y_weighted)
-
-    # # ==========================================
-    # # DEBUG INFO
-    # # ==========================================
-    # print("\n[FUSION CLASS WEIGHTS]")
-
-    # for i in range(len(f1_text)):
-    # 	print(
-    # 		f"Class {i}: "
-    # 		f"text={w_text[0][i]:.2f} | "
-    # 		f"image={w_image[0][i]:.2f}"
-    # 	)
-
     return evaluations
+
+def get_positive_proba(model, X):
+    proba = model.predict_proba(X)
+
+    if isinstance(proba, list):
+        return np.column_stack([p[:, 1] for p in proba])
+
+    proba = np.asarray(proba)
+
+    if proba.ndim == 3:
+        return proba[:, :, 1]
+
+    return proba
+
+from sklearn.metrics import f1_score, hamming_loss
+import numpy as np
+
+def find_best_threshold(y_true, y_proba,
+                        thresholds=np.arange(0.05, 0.95, 0.05)):
+
+    best_t = 0.5
+    best_f1 = -1
+
+    for t in thresholds:
+
+        y_pred = (y_proba > t).astype(int)
+
+        score = f1_score(
+            y_true,
+            y_pred,
+            average="macro",
+            zero_division=0
+        ) - 0*hamming_loss(
+            y_true,
+            y_pred
+        )
+
+        if score > best_f1:
+            best_f1 = score
+            best_t = t
+
+    return best_t, best_f1

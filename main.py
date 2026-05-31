@@ -29,20 +29,17 @@ def main(test_type: str, test_subtype: str = "text") -> None:
 
     if test_type == "text":
 
-        for mt1 in ["random_forest", "mlp"]:
+        for mt1 in ["random_forest"]:
 
             for vect1 in ["distilbert"]:
 
                 config = {
                     "type": "text",
-                    "balanced": True,
                     "vectorizers": [vect1],
                     "models": [mt1],
-                    "max_features_tfidf": 20000,
-                    "max_iter": 40,
-                    "learning_rate_init": 0.001,
-                    "max_depth": 5,
-                    "max_iter_svm": 5000,
+                    "balanced_list": [True],
+                    #"thresholds": [0.1,0.2,0.3,0.4,0.5,0.6,0.7]
+
                 }
 
                 print(config)
@@ -54,17 +51,14 @@ def main(test_type: str, test_subtype: str = "text") -> None:
 
     elif test_type == "graphics":
 
-        for mt2 in ["logistic", "random_forest", "mlp"]:
-            for vect2 in ["resnet50"]:
+        for mt2 in ["random_forest"]: #, "random_forest", "mlp"
+            for vect2 in ["resnet50"]:  #, "resnet50"
                 config = {
                     "type": "graphics",
-                    "balanced": True,
                     "vectorizers": [vect2],
                     "models": [mt2],
-                    "max_iter": 40,
-                    "learning_rate_init": 0.001,
-                    "max_depth": 5,
-                    "max_iter_svm": 5000,
+                    "balanced_list": [True],
+                    #"thresholds":[0.1,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19,0.2,0.21,0.22,0.23,0.24,0.25,0.26,0.27,0.28,0.29,0.3,0.31,0.32,0.33,0.34,0.35,0.36,0.37,0.38,0.39,0.4,0.41,0.42,0.43,0.44,0.45]
                 }
 
                 print(config)
@@ -82,14 +76,8 @@ def main(test_type: str, test_subtype: str = "text") -> None:
                     for vect2 in ["resnet50"]:  # "resnet18",
                         config = {
                             "type": "late-fusion",
-                            "balanced_list": [True, True],
                             "vectorizers": [vect1, vect2],
                             "models": [mt1, mt2],
-                            "max_features_tfidf": 20000,
-                            "max_iter": 40,
-                            "learning_rate_init": 0.001,
-                            "max_depth": 5,
-                            "max_iter_svm": 5000,
                         }
 
                         print(config)
@@ -106,13 +94,8 @@ def main(test_type: str, test_subtype: str = "text") -> None:
                 for vect2 in ["resnet50"]:  # "resnet18",
                     config = {
                         "type": "early-fusion",
-                        "balanced": True,
                         "vectorizers": [vect1, vect2],
                         "models": [mt1],
-                        "max_iter": 40,
-                        "learning_rate_init": 0.001,
-                        "max_depth": 5,
-                        "max_iter_svm": 5000,
                     }
 
                     print(config)
@@ -147,6 +130,6 @@ def main(test_type: str, test_subtype: str = "text") -> None:
         print(leak_df)
 
 if __name__ == "__main__":
-    test_type = "info"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
+    test_type = "graphics"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
     test_subtype = "early-fusion"   # for "tuning" test_type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
     main(test_type, test_subtype)
