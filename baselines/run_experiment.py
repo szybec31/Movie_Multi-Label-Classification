@@ -194,9 +194,10 @@ def run_experiment(df, y, split=None, **config):
     preds = []
     probas = []
     evaluations = {}
-    y_preds = []
-
+    
     for i, model_name in enumerate(config["models"]):
+        y_preds = []
+        best_params = {}
         best_threshold = 0.0
         Xtr = features_train[i]
         Xte = features_test[i]
@@ -210,9 +211,9 @@ def run_experiment(df, y, split=None, **config):
             from .models.logistic import get_logistic
             base = get_logistic(config["balanced_list"][i])
 
-        elif model_name == "svm":
-            from .models.svm import get_svm
-            base = get_svm(config["balanced_list"][i], **clean_model_config(config, ["balanced"]))
+        # elif model_name == "svm":
+        #     from .models.svm import get_svm
+        #     base = get_svm(config["balanced_list"][i], **clean_model_config(config, ["balanced"]))
 
         elif model_name == "random_forest":
             from .models.randomforest import get_random_forest
@@ -255,22 +256,25 @@ def run_experiment(df, y, split=None, **config):
                     param_grid = grid_params,
                     cv = inner_cv,
                     scoring = scorer,
-                    n_jobs = -1
+                    n_jobs = -1,
+                    refit=True
                 )
 
                 grid_search.fit(Xtr, y_train)
                 #print(f"\n    Best params: {grid_search.best_params_}")
                 #print(f"    Best CV MAE: {-grid_search.best_score_:.4f}")
                 best_model = grid_search.best_estimator_
+                best_params = grid_search.best_params_
             
             else:
                 best_model = base
+                best_model.fit(Xtr, y_train)
 
         else:
             best_model = base
+            best_model.fit(Xtr, y_train)
         
-        best_model.fit(Xtr, y_train)
-
+        
         # ========================
         #       THRESHOLD
         # ========================
@@ -278,7 +282,7 @@ def run_experiment(df, y, split=None, **config):
         if model_name in ["logistic", "random_forest", "mlp"]:
             #print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
             y_proba = get_positive_proba(best_model, Xte)
-            if config.get("all_thresholds", False) and len(thresholds) > 0 and thresholds[0] is not None:
+            if config.get("use_threshold_grid", False) and config.get("all_thresholds", False) and len(thresholds) > 0 and thresholds[0] is not None:
                 
                 for threshold in thresholds:
                     y_pred = (
@@ -286,7 +290,7 @@ def run_experiment(df, y, split=None, **config):
                     ).astype(int)
                     y_preds.append(y_pred)
                     print("predict sum:", y_pred.sum())
-            else:
+            elif config.get("use_threshold_grid", False):
                 inner_cv = MultilabelStratifiedKFold(
                     n_splits=3,
                     shuffle=True,
@@ -322,21 +326,34 @@ def run_experiment(df, y, split=None, **config):
                 print("true labels:", y_test.sum())
                 print("predict sum:", y_pred.sum())
                 print("true sum:", y_test.sum())
+            else:
+                y_pred = (
+                    y_proba > (0.5)
+                ).astype(int)
 
-        elif model_name in ["svm"]:
-            y_pred = best_model.predict(Xte)
-            y_proba = best_model.predict(Xte)
+        # elif model_name in ["svm"]:
+        #     y_pred = best_model.predict(Xte)
+        #     y_proba = best_model.predict(Xte)
 
         # ========================
         #       METRICS
         # ========================
 
-        if len(config["models"]) == 1 and config.get("all_thresholds", False):
-            for j, yps in enumerate(y_preds):
-                dictio = evaluate(y_test, yps)
-                dictio["best_threshold"] = best_threshold if best_threshold > 0.0 else thresholds[j] if len(thresholds) > j else 0.0
-                #print("thresholds: ", i, thresholds[i])
-                evaluations[f"threshold_{thresholds[j] if len(thresholds) > j else best_threshold}"] = dictio
+        if len(config["models"]) == 1:
+            if config.get("all_thresholds", False):
+                for j, yps in enumerate(y_preds):
+                    dictio = evaluate(y_test, yps)
+                    dictio["best_threshold"] = best_threshold if best_threshold > 0.0 else thresholds[j] if len(thresholds) > j else 0.0
+                    dictio["best_params"] = best_params
+                    #print("thresholds: ", i, thresholds[i])
+                    evaluations[f"threshold_{thresholds[j] if len(thresholds) > j else best_threshold}"] = dictio
+            else:
+                evaluations["default"] = evaluate(y_test, y_pred)
+                evaluations["default"]["best_threshold"] = (
+                    best_threshold if config.get("use_threshold_grid", False)
+                    else 0.5
+                )
+                evaluations["default"]["best_params"] = best_params
         preds.append(y_pred)
         probas.append(y_proba)
 

@@ -72,8 +72,13 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                         "outer_cv": 10,
                         "inner_cv": 3,
                         "use_threshold_grid": use_threshold_grid,
+                        "use_model_grid": use_model_grid,
                         "grid": grid,
-                        "all_thresholds": False
+                        "save_more_metadata": True,
+                        # "all_thresholds": True,
+                        # "use_subset": True,
+                        # "subset_size": 0.1,
+                        # "plot_show": True, 
                     }
 
                     print(config)
@@ -81,6 +86,9 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                     results = run_cv(df, y, **config)
 
 if __name__ == "__main__":
-    type = "graphics"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
-    # for "tuning" type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
-    main(type, True, True)
+    type = "graphics"    # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    main(
+        type = type,
+        use_threshold_grid = True,
+        use_model_grid = True
+    )

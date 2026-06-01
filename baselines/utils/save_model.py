@@ -41,6 +41,7 @@ def save_fold_results(
     config: dict,
     fold: int,
     results: dict,
+    fold_time: float,
     file_path: str = "results_folds.csv"
 ):
     rows = []
@@ -50,13 +51,14 @@ def save_fold_results(
         row = {
             "type": config.get("type"),
             "fold": fold,
+            "fold_time": f"{fold_time:.3f}",
             "experiment": exp_name,
             "vectorizer1": config["vectorizers"][0] if len(config["vectorizers"]) > 0 else None,
             "vectorizer2": config["vectorizers"][1] if len(config["vectorizers"]) > 1 else None,
             "model1": config["models"][0] if len(config["models"]) > 0 else None,
             "model2": config["models"][1] if len(config["models"]) > 1 else None,
+            **metrics,
             "config": str(config),
-            **metrics
         }
 
         rows.append(row)
@@ -82,8 +84,8 @@ def save_all_results(
         "vectorizer2": config["vectorizers"][1] if len(config["vectorizers"]) > 1 else None,
         "model1": config["models"][0] if len(config["models"]) > 0 else None,
         "model2": config["models"][1] if len(config["models"]) > 1 else None,
+        **mean_results,
         "config": str(config),
-        **mean_results
     }
 
     df_new = pd.DataFrame([row])
