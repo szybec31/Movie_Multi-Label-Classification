@@ -36,3 +36,60 @@ def save_model_info(config, results, elapsed_time, add: str = "", file_path: str
         df_final = df_new
 
     df_final.to_csv(file_path, index=False)
+
+def save_fold_results(
+    config: dict,
+    fold: int,
+    results: dict,
+    file_path: str = "results_folds.csv"
+):
+    rows = []
+
+    for exp_name, metrics in results.items():
+
+        row = {
+            "type": config.get("type"),
+            "fold": fold,
+            "experiment": exp_name,
+            "vectorizer1": config["vectorizers"][0] if len(config["vectorizers"]) > 0 else None,
+            "vectorizer2": config["vectorizers"][1] if len(config["vectorizers"]) > 1 else None,
+            "model1": config["models"][0] if len(config["models"]) > 0 else None,
+            "model2": config["models"][1] if len(config["models"]) > 1 else None,
+            "config": str(config),
+            **metrics
+        }
+
+        rows.append(row)
+
+    df_new = pd.DataFrame(rows)
+
+    if os.path.exists(file_path):
+        df_old = pd.read_csv(file_path)
+        df_new = pd.concat([df_old, df_new], ignore_index=True)
+
+    df_new.to_csv(file_path, index=False)
+
+def save_all_results(
+    config: dict,
+    exp_name: str,
+    mean_results: dict,
+    file_path: str = "results_mean.csv"
+):
+    row = {
+        "type": config.get("type"),
+        "experiment": exp_name,
+        "vectorizer1": config["vectorizers"][0] if len(config["vectorizers"]) > 0 else None,
+        "vectorizer2": config["vectorizers"][1] if len(config["vectorizers"]) > 1 else None,
+        "model1": config["models"][0] if len(config["models"]) > 0 else None,
+        "model2": config["models"][1] if len(config["models"]) > 1 else None,
+        "config": str(config),
+        **mean_results
+    }
+
+    df_new = pd.DataFrame([row])
+
+    if os.path.exists(file_path):
+        df_old = pd.read_csv(file_path)
+        df_new = pd.concat([df_old, df_new], ignore_index=True)
+
+    df_new.to_csv(file_path, index=False)

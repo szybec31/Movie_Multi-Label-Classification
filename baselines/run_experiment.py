@@ -5,6 +5,9 @@ from .utils.metrics import evaluate
 from .utils.clear import clean_text
 from sklearn.metrics import f1_score, hamming_loss
 import numpy as np
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
+from sklearn.model_selection import cross_val_predict
+
 
 def run_experiment(df, y, split=None, **config):
     # Could be outdated... ========================
@@ -228,12 +231,11 @@ def run_experiment(df, y, split=None, **config):
         #      GRID SEARCH
         # ========================
 
-        if config.get("use_threshold_grid", False) and "grid" in config and len(config.get("grid", [])) == 2:
+        if config.get("use_model_grid", False) and "grid" in config and len(config.get("grid", [])) == 2:
             grid_params = config["grid"][i]
             if grid_params:
 
                 from sklearn.model_selection import GridSearchCV
-                from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
                 from sklearn.metrics import make_scorer, f1_score
 
                 scorer = make_scorer(
@@ -260,26 +262,14 @@ def run_experiment(df, y, split=None, **config):
                 #print(f"\n    Best params: {grid_search.best_params_}")
                 #print(f"    Best CV MAE: {-grid_search.best_score_:.4f}")
                 best_model = grid_search.best_estimator_
-
-                best_model.fit(
-                    Xtr,
-                    y_train
-                )
-
-                y_proba = best_model.predict_proba(Xte)
-
-                y_pred = (
-                    y_proba > best_threshold
-                ).astype(int)
             
             else:
                 best_model = base
-                best_model.fit(Xtr, y_train)
 
         else:
             best_model = base
-            best_model.fit(Xtr, y_train)
-
+        
+        best_model.fit(Xtr, y_train)
 
         # ========================
         #       THRESHOLD
@@ -297,11 +287,24 @@ def run_experiment(df, y, split=None, **config):
                     y_preds.append(y_pred)
                     print("predict sum:", y_pred.sum())
             else:
-                train_proba = get_positive_proba(best_model, Xtr)
+                inner_cv = MultilabelStratifiedKFold(
+                    n_splits=3,
+                    shuffle=True,
+                    random_state=42
+                )
+
+                oof_proba = cross_val_predict(
+                    best_model,
+                    Xtr,
+                    y_train,
+                    cv=inner_cv,
+                    method="predict_proba",
+                    n_jobs=-1
+                )
 
                 best_threshold, train_f1 = find_best_threshold(
                     y_train,
-                    train_proba,
+                    oof_proba,
                     thresholds
                 )
                 y_pred = (
@@ -328,7 +331,7 @@ def run_experiment(df, y, split=None, **config):
         #       METRICS
         # ========================
 
-        if len(config["models"]) == 1:
+        if len(config["models"]) == 1 and config.get("all_thresholds", False):
             for j, yps in enumerate(y_preds):
                 dictio = evaluate(y_test, yps)
                 dictio["best_threshold"] = best_threshold if best_threshold > 0.0 else thresholds[j] if len(thresholds) > j else 0.0
