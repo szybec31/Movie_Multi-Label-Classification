@@ -1,6 +1,7 @@
 get_model_name = {
     "text": [
-        ["logistic", "random_forest", "mlp"],
+        # ["logistic", "random_forest", "mlp"],
+        ["random_forest", "mlp"],
         [None]
     ],
     "graphics": [
