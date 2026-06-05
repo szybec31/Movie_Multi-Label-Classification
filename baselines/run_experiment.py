@@ -241,7 +241,7 @@ def run_experiment(df, y, split=None, **config):
 
                 scorer = make_scorer(
                     f1_score,
-                    average="macro",
+                    average="samples",
                     zero_division=0
                 )
 
@@ -268,11 +268,12 @@ def run_experiment(df, y, split=None, **config):
             
             else:
                 best_model = base
-                best_model.fit(Xtr, y_train)
 
         else:
             best_model = base
-            best_model.fit(Xtr, y_train)
+
+        print("Try!")
+        best_model.fit(Xtr, y_train)
         
         
         # ========================
@@ -406,7 +407,7 @@ def find_best_threshold(y_true, y_proba, thresholds: list[float] | None = None):
         score = f1_score(
             y_true,
             y_pred,
-            average="macro",
+            average="samples",
             zero_division=0
         ) - 0*hamming_loss(
             y_true,

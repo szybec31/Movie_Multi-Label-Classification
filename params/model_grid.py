@@ -7,9 +7,8 @@ get_model_grid = {
 
     "random_forest": {
         "estimator__n_estimators": [100, 200, 300],
-        "estimator__max_depth": [3, 5, 10],
-        # "estimator__max_features": ["sqrt", 0.8],
-        # "estimator__min_samples_split": [2, 5],
+        "estimator__max_depth": [5, 10],
+        "estimator__max_features": ["sqrt"],
         "estimator__class_weight": ["balanced"]
     },
 

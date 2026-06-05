@@ -4,9 +4,6 @@ from sklearn.ensemble import RandomForestClassifier
 
 def get_random_forest(balanced=True, **config):
     base_model = RandomForestClassifier(
-        n_estimators = config["n_estimators"] if "n_estimators" in config else 200,
-        max_depth = config["max_depth"] if "max_depth" in config else 5,
-        max_features = config["max_features_rf"] if "max_features_rf" in config else 'sqrt',
         n_jobs=-1,
         random_state=42,
         class_weight='balanced' if balanced else None
