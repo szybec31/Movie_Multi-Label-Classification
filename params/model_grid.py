@@ -14,7 +14,6 @@ get_model_grid = {
 
     "mlp": {
         "hidden_layer_sizes": [
-            (256,),
             (256, 128),
             (512, 256)
         ],
@@ -22,13 +21,11 @@ get_model_grid = {
             0.001,
             0.0005
         ],
-        "alpha": [
-            1e-5,
-            1e-4,
-            1e-3
-        ],
-        "max_iter": [
-            80
-        ]
+        "alpha": [1e-5, 1e-4, 1e-3],
+        "max_iter": [40],
+        "activation": ['relu'],
+        "solver": ['adam'],
+        "batch_size": [64],
+        "early_stopping": [True],
     }
 }
