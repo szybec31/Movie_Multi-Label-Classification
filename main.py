@@ -77,7 +77,7 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                         "use_model_grid": use_model_grid,
                         "grid": grid,
                         "save_more_metadata": True,
-                        "all_thresholds": False,
+                        # "all_thresholds": False,
                         # "use_subset": True,
                         # "subset_size": 0.1,
                         # "plot_show": True, 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     #     use_model_grid = True
     # )
 
-    type = "graphics"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    type = "early-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
     main(
         type=type,
         use_threshold_grid=True,
