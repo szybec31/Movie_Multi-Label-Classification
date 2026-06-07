@@ -199,6 +199,7 @@ def run_experiment(df, y, split=None, **config):
     # ========================
     preds = [[], []]
     probas = []
+    oof_probas = []
     evaluations = {}
     
     for i, model_name in enumerate(config["models"]):
@@ -321,6 +322,14 @@ def run_experiment(df, y, split=None, **config):
                     oof_proba,
                     thresholds
                 )
+
+                oof_proba = np.asarray(oof_proba)
+
+                if oof_proba.ndim == 3:
+                    oof_proba = oof_proba[:, :, 1]
+
+                oof_probas.append(oof_proba)
+
                 y_pred = (
                     y_proba > (best_threshold)
                 ).astype(int)
@@ -381,7 +390,7 @@ def run_experiment(df, y, split=None, **config):
         # BASELINES
         # ========================
         # choose best preds form [[], []] -> new_preds = [best(i), best(j)]
-        if config.get("all_thresholds", False):
+        if config.get("all_thresholds", False) or config.get("all_thresholds_for_late_fusion", False):
             for i, predA in enumerate(preds[0]):
                 for j, predB in enumerate(preds[1]):
                     y_or = np.logical_or.reduce([predA, predB]).astype(int)
@@ -395,12 +404,31 @@ def run_experiment(df, y, split=None, **config):
                 y_avg = (np.mean(probas, axis=0) > th).astype(int)
                 evaluations[f"late-fusion-avg_{th}"] = evaluate(y_test, y_avg)
         else:
-            y_or = np.logical_or.reduce([preds[0], preds[1]]).astype(int)
-            y_and = np.logical_and.reduce([preds[0], preds[1]]).astype(int)
+            y_or = np.logical_or.reduce([preds[0][0], preds[1][0]]).astype(int)
+            y_and = np.logical_and.reduce([preds[0][0], preds[1][0]]).astype(int)
             evaluations[f"late-fusion-or"] = evaluate(y_test, y_or)
             evaluations[f"late-fusion-and"] = evaluate(y_test, y_and)
 
-            y_avg = (np.mean(probas, axis=0) > 0.5).astype(int)
+            best_threshold = 0.5
+            thresholds = config.get("thresholds", [[],[],None])[2]
+
+            if config.get("use_threshold_grid", False):
+            ## how to add this auto threshold
+                oof1, oof2 = oof_probas
+                avg_oof = (oof1 + oof2) / 2
+
+                best_threshold, train_f1 = find_best_threshold(
+                    y_train,
+                    avg_oof,
+                    thresholds
+                )
+
+                print(
+                    f"Late fusion AVG threshold={best_threshold:.2f}"
+                    f" train F1={train_f1:.4f}"
+                )
+
+            y_avg = (np.mean(probas, axis=0) > best_threshold).astype(int)
             evaluations[f"late-fusion-avg"] = evaluate(y_test, y_avg)
 
     return evaluations
