@@ -1,7 +1,7 @@
 get_model_grid = {
 
     "logistic": {
-        "estimator__C": [0.01, 0.1, 1.0, 10.0],
+        "estimator__C": [0.01, 0.1, 1.0],
         "estimator__class_weight": [None, "balanced"]
     },
 

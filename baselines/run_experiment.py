@@ -63,21 +63,27 @@ def run_experiment(df, y, split=None, **config):
     if "thresholds_graphics" not in config:
         config["thresholds_graphics"] = [None]
 
+    if "thresholds_late" not in config:
+        config["thresholds_late"] = [None]
+
     if "thresholds" not in config:
         if config["type"] in ["text", "early-fusion", "late-fusion"]:
             config["thresholds"] = [
                 config["thresholds_text"],
-                config["thresholds_graphics"]
+                config["thresholds_graphics"],
+                config["thresholds_late"]
             ]
         else:
             config["thresholds"] = [
                 config["thresholds_graphics"],
-                [None]
+                [None],
+                [None],
             ]
     else:
         config["thresholds"] = [
             config["thresholds"],
-            config["thresholds"]
+            config["thresholds"],
+            config["thresholds"],
         ]
 
     if "balanced_list" not in config:
@@ -191,7 +197,7 @@ def run_experiment(df, y, split=None, **config):
     # ========================
     # MODELS AND PREDICTIONS
     # ========================
-    preds = []
+    preds = [[], []]
     probas = []
     evaluations = {}
     
@@ -280,9 +286,10 @@ def run_experiment(df, y, split=None, **config):
         #       THRESHOLD
         # ========================
 
+        y_proba = get_positive_proba(best_model, Xte)
+
         if model_name in ["logistic", "random_forest", "mlp"]:
             #print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
-            y_proba = get_positive_proba(best_model, Xte)
             if config.get("use_threshold_grid", False) and config.get("all_thresholds", False) and len(thresholds) > 0 and thresholds[0] is not None:
                 
                 for threshold in thresholds:
@@ -290,7 +297,9 @@ def run_experiment(df, y, split=None, **config):
                         y_proba > (threshold)
                     ).astype(int)
                     y_preds.append(y_pred)
+                    preds[i].append(y_pred)
                     print("predict sum:", y_pred.sum())
+
             elif config.get("use_threshold_grid", False):
                 inner_cv = MultilabelStratifiedKFold(
                     n_splits=3,
@@ -318,6 +327,7 @@ def run_experiment(df, y, split=None, **config):
 
                 print(f"Best threshold={best_threshold:.2f} (train micro-F1={train_f1:.4f})")
                 y_preds.append(y_pred)
+                preds[i].append(y_pred)
 
                 print("shape:", y_proba.shape)
                 print("min:", y_proba.min())
@@ -331,6 +341,7 @@ def run_experiment(df, y, split=None, **config):
                 y_pred = (
                     y_proba > (0.5)
                 ).astype(int)
+                preds[i].append(y_pred)
 
         # elif model_name in ["svm"]:
         #     y_pred = best_model.predict(Xte)
@@ -355,7 +366,7 @@ def run_experiment(df, y, split=None, **config):
                     else 0.5
                 )
                 evaluations["default"]["best_params"] = best_params
-        preds.append(y_pred)
+        
         probas.append(y_proba)
 
     # ========================
@@ -369,13 +380,28 @@ def run_experiment(df, y, split=None, **config):
         # ========================
         # BASELINES
         # ========================
-        y_or = np.logical_or.reduce(preds).astype(int)
-        y_and = np.logical_and.reduce(preds).astype(int)
-        y_avg = (np.mean(probas, axis=0) > 0.5).astype(int)
+        # choose best preds form [[], []] -> new_preds = [best(i), best(j)]
+        if config.get("all_thresholds", False):
+            for i, predA in enumerate(preds[0]):
+                for j, predB in enumerate(preds[1]):
+                    y_or = np.logical_or.reduce([predA, predB]).astype(int)
+                    y_and = np.logical_and.reduce([predA, predB]).astype(int)
+                    evaluations[f"late-fusion-or_{i}_{j}"] = evaluate(y_test, y_or)
+                    evaluations[f"late-fusion-and_{i}_{j}"] = evaluate(y_test, y_and)
 
-        evaluations["late-fusion-or"] = evaluate(y_test, y_or)
-        evaluations["late-fusion-and"] = evaluate(y_test, y_and)
-        evaluations["late-fusion-avg"] = evaluate(y_test, y_avg)
+            
+            thresholds = config.get("thresholds", [[],[],[0.5]])[2]
+            for th in thresholds:
+                y_avg = (np.mean(probas, axis=0) > th).astype(int)
+                evaluations[f"late-fusion-avg_{th}"] = evaluate(y_test, y_avg)
+        else:
+            y_or = np.logical_or.reduce([preds[0], preds[1]]).astype(int)
+            y_and = np.logical_and.reduce([preds[0], preds[1]]).astype(int)
+            evaluations[f"late-fusion-or"] = evaluate(y_test, y_or)
+            evaluations[f"late-fusion-and"] = evaluate(y_test, y_and)
+
+            y_avg = (np.mean(probas, axis=0) > 0.5).astype(int)
+            evaluations[f"late-fusion-avg"] = evaluate(y_test, y_avg)
 
     return evaluations
 

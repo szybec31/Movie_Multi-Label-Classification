@@ -57,6 +57,7 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                 for mt2 in models[1]:
                     thresholds_text = get_thresholds[type][vect1] if type != "graphics" else [None]
                     thresholds_graphics = get_thresholds[type][vect1] if type == "graphics" else get_thresholds[type][vect2] if type in ["early-fusion", "late-fusion"] else [None]
+                    thresholds_late = get_thresholds[type]["late"]
                     grid = [
                         get_model_grid.get(mt1, {}),
                         get_model_grid.get(mt2, {})
@@ -69,6 +70,7 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                         "balanced_list": [True, True],
                         "thresholds_text": thresholds_text,
                         "thresholds_graphics": thresholds_graphics,
+                        "thresholds_late": thresholds_late,
                         "outer_cv": 10,
                         "inner_cv": 3,
                         "use_threshold_grid": use_threshold_grid,
@@ -86,12 +88,12 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                     results = run_cv(df, y, **config)
 
 if __name__ == "__main__":
-    type = "text"    # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
-    main(
-        type = type,
-        use_threshold_grid = True,
-        use_model_grid = True
-    )
+    # type = "text"    # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    # main(
+    #     type = type,
+    #     use_threshold_grid = True,
+    #     use_model_grid = True
+    # )
 
     type = "graphics"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
     main(
@@ -99,8 +101,16 @@ if __name__ == "__main__":
         use_threshold_grid=True,
         use_model_grid=True
     )
+    exit()
 
-    type = "early-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    # type = "early-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    # main(
+    #     type=type,
+    #     use_threshold_grid=True,
+    #     use_model_grid=True
+    # )
+
+    type = "late-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
     main(
         type=type,
         use_threshold_grid=True,
