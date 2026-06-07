@@ -77,7 +77,7 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                         "use_model_grid": use_model_grid,
                         "grid": grid,
                         "save_more_metadata": True,
-                        "all_thresholds": True,
+                        "all_thresholds": False,
                         # "use_subset": True,
                         # "subset_size": 0.1,
                         # "plot_show": True, 
