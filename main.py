@@ -2,18 +2,20 @@ import pandas as pd
 from EDA import TextEDA
 from label_transform import LabelTransform
 from baselines.run_cv import run_cv
-from baselines.utils.save_model import save_model_info
-from baselines.grid_search import run_grid_search
-from baselines.freeze_models import freeze_model
-from baselines.utils.test_configs import freeze_configs
-import time
+# from baselines.utils.save_model import save_model_info
+# from baselines.grid_search import run_grid_search
+# from baselines.freeze_models import freeze_model
+# from baselines.utils.test_configs import freeze_configs
+from params.models import get_model_name
+from params.vectorizers import get_vectorizer_name
+from params.threshold_grid import get_thresholds
+from params.model_grid import get_model_grid
 
-def main(test_type: str, test_subtype: str = "text") -> None:
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', None)
-    pd.set_option('display.max_rows', 20)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_rows', 20)
 
-    # Wczytanie danych
+def load():
     df = pd.read_csv("movies.csv")
 
     # EDA - podstawowe informacje, usunięcie null
@@ -23,130 +25,93 @@ def main(test_type: str, test_subtype: str = "text") -> None:
 
     # Transformacja etykiet do wektorów 1 na 18
     lt = LabelTransform(df)
+    return df, lt, eda
+
+def info():
+    _, lt, eda = load()
+
     y = lt.preprocessing()
     y_label = lt.y_labels
     y_count = lt.y_count
+    # Podsumowanie informacji na temat zbioru
+    eda.display_summary(y=y, y_labels=y_label, y_count=y_count)
+    eda.chart_summary()
+    eda.class_distribution()
+    leak_df = eda.check_label_leakage(y, y_label)
+    print(leak_df)
 
-    if test_type == "text":
+def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bool = False) -> None:
+    if type == "info":
+        info()
+        return
 
-        for mt1 in ["random_forest", "mlp"]:
+    df, lt, _ = load()
+    y = lt.preprocessing()
 
-            for vect1 in ["distilbert"]:
+    models = get_model_name[type]
+    vectorizers = get_vectorizer_name[type]
+    
+    for vect1 in vectorizers[0]:
+        for vect2 in vectorizers[1]:
+            for mt1 in models[0]:
+                for mt2 in models[1]:
+                    thresholds_text = get_thresholds[type][vect1] if type != "graphics" else [None]
+                    thresholds_graphics = get_thresholds[type][vect1] if type == "graphics" else get_thresholds[type][vect2] if type in ["early-fusion", "late-fusion"] else [None]
+                    thresholds_late = get_thresholds[type]["late"]
+                    grid = [
+                        get_model_grid.get(mt1, {}),
+                        get_model_grid.get(mt2, {})
+                    ] if use_model_grid else [{}, {}]
 
-                config = {
-                    "type": "text",
-                    "balanced": True,
-                    "vectorizers": [vect1],
-                    "models": [mt1],
-                    "max_features_tfidf": 20000,
-                    "max_iter": 40,
-                    "learning_rate_init": 0.001,
-                    "max_depth": 5,
-                    "max_iter_svm": 5000,
-                }
-
-                print(config)
-
-                start = time.time()
-                results = run_cv(df, y, 10, **config)
-                end = time.time()
-                save_model_info(config, results, end-start)
-
-    elif test_type == "graphics":
-
-        for mt2 in ["logistic", "random_forest", "mlp"]:
-            for vect2 in ["resnet50"]:
-                config = {
-                    "type": "graphics",
-                    "balanced": True,
-                    "vectorizers": [vect2],
-                    "models": [mt2],
-                    "max_iter": 40,
-                    "learning_rate_init": 0.001,
-                    "max_depth": 5,
-                    "max_iter_svm": 5000,
-                }
-
-                print(config)
-
-                start = time.time()
-                results = run_cv(df, y, 10, **config)
-                end = time.time()
-                save_model_info(config, results, end-start)
-
-    elif test_type == "late-fusion":
-
-        for mt1 in ["mlp"]:                                     # "svm", "logistic", "random_forest", "mlp"
-            for mt2 in ["logistic", "random_forest", "mlp"]:    # "logistic", "random_forest", "mlp"
-                for vect1 in ["distilbert"]:    # "tfidf",
-                    for vect2 in ["resnet50"]:  # "resnet18",
-                        config = {
-                            "type": "late-fusion",
-                            "balanced_list": [True, True],
-                            "vectorizers": [vect1, vect2],
-                            "models": [mt1, mt2],
-                            "max_features_tfidf": 20000,
-                            "max_iter": 40,
-                            "learning_rate_init": 0.001,
-                            "max_depth": 5,
-                            "max_iter_svm": 5000,
-                        }
-
-                        print(config)
-
-                        start = time.time()
-                        results = run_cv(df, y, 10, **config)
-                        end = time.time()
-                        save_model_info(config, results, end-start)
-
-    elif test_type == "early-fusion":
-
-        for mt1 in ["logistic", "random_forest", "mlp"]:
-            for vect1 in ["distilbert"]:    # "tfidf",
-                for vect2 in ["resnet50"]:  # "resnet18",
                     config = {
-                        "type": "early-fusion",
-                        "balanced": True,
-                        "vectorizers": [vect1, vect2],
-                        "models": [mt1],
-                        "max_iter": 40,
-                        "learning_rate_init": 0.001,
-                        "max_depth": 5,
-                        "max_iter_svm": 5000,
+                        "type": type,
+                        "vectorizers": [vect1] if vect2 is None else [vect1, vect2],
+                        "models": [mt1] if mt2 is None else [mt1, mt2],
+                        "balanced_list": [True, True],
+                        "thresholds_text": thresholds_text,
+                        "thresholds_graphics": thresholds_graphics,
+                        "thresholds_late": thresholds_late,
+                        "outer_cv": 10,
+                        "inner_cv": 3,
+                        "use_threshold_grid": use_threshold_grid,
+                        "use_model_grid": use_model_grid,
+                        "grid": grid,
+                        "save_more_metadata": True,
+                        # "all_thresholds": False,
+                        # "use_subset": True,
+                        # "subset_size": 0.1,
+                        # "plot_show": True, 
                     }
 
                     print(config)
 
-                    start = time.time()
-                    results = run_cv(df, y, 10, **config)
-                    end = time.time()
-                    save_model_info(config, results, end-start)
-
-    elif test_type == "tuning":
-
-        tuning_type = test_subtype
-        run_grid_search(df, y, tuning_type)
-
-    elif test_type == "freeze":
-
-        freeze_types = ["text", "graphics", "early-fusion"]
-        for f_type in freeze_types:
-            configs = freeze_configs(f_type)
-
-            # Files for frozen models are invisible in PyCharm due to its lack of support for .pkl extension, but those
-            # files are indeed there if you look for them in file explorer
-            for config in configs:
-                freeze_model(df, y, config, mlb=lt.mlb)
-
-    elif test_type == "info":
-        # Podsumowanie informacji na temat zbioru
-        eda.display_summary(y=y, y_labels=y_label, y_count=y_count)
-        eda.chart_summary()
-        eda.class_distribution()
-        leak_df = eda.check_label_leakage(y, y_label)
-        print(leak_df)
+                    results = run_cv(df, y, **config)
 
 if __name__ == "__main__":
-    test_type = "info"    # "graphics", "late-fusion", "text", "early-fusion", "tuning", "freeze" or "info"
-    test_subtype = "early-fusion"   # for "tuning" test_type only; you may choose: "text", "graphics", "early-fusion" or "late-fusion"
-    main(test_type, test_subtype)
+    type = "text"    # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    main(
+        type = type,
+        use_threshold_grid = True,
+        use_model_grid = True
+    )
+
+    # type = "graphics"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    # main(
+    #     type=type,
+    #     use_threshold_grid=True,
+    #     use_model_grid=True
+    # )
+
+    # type = "early-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    # main(
+    #     type=type,
+    #     use_threshold_grid=True,
+    #     use_model_grid=True
+    # )
+
+    # type = "late-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    # main(
+    #     type=type,
+    #     use_threshold_grid=True,
+    #     use_model_grid=True
+    # )
