@@ -95,7 +95,7 @@ if __name__ == "__main__":
     #     use_model_grid = True
     # )
 
-    type = "early-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
+    type = "late-fusion"  # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
     main(
         type=type,
         use_threshold_grid=True,
