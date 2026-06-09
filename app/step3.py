@@ -1,33 +1,27 @@
 import numpy as np
-from PyQt5.QtWidgets import (
-    QVBoxLayout, QWidget, QPushButton,
-    QLabel, QRadioButton, QHBoxLayout
-)
+from PyQt5.QtWidgets import (QVBoxLayout, QWidget, QPushButton, QLabel, QRadioButton, QHBoxLayout)
 from PyQt5.QtCore import Qt
 
-# --- KROK 3 ---
+
 class Step3(QWidget):
     def __init__(self, main, back_callback):
         super().__init__()
 
         self.main = main
+        self.back_callback = back_callback  # To jest oryginalny callback powrotu do Step 2
         self.text_vectorizer = main.text_vectorizer
         self.image_vectorizer = main.image_vectorizer
 
         self.movie_title = ""
         self.movie_description = ""
         self.image_path = ""
-        self.audio_video_path = ""
 
-        # =========================
-        # GŁÓWNY LAYOUT (centrowanie)
-        # =========================
+        # Flaga pomagająca określić, czy jesteśmy na ekranie wyniku, czy wyboru metody
+        self.showing_results = False
+
         main_layout = QVBoxLayout()
         main_layout.setAlignment(Qt.AlignCenter)
 
-        # =========================
-        # KONTENER (spójny z Step2)
-        # =========================
         container = QWidget()
         container.setMaximumWidth(400)
         container.setMinimumWidth(400)
@@ -35,58 +29,47 @@ class Step3(QWidget):
         layout = QVBoxLayout()
         layout.setSpacing(12)
 
-        # =========================
-        # TYTUŁ
-        # =========================
+        # Główny nagłówek stanu
         self.title_label = QLabel("Select multimodal method")
         self.title_label.setAlignment(Qt.AlignCenter)
         self.title_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         layout.addWidget(self.title_label)
-        # =========================
-        # RADIO BUTTONY
-        # =========================
+
+        # Centralne pole tekstowe na wyniki predykcji
+        self.genres_result_label = QLabel("")
+        self.genres_result_label.setAlignment(Qt.AlignCenter)
+        self.genres_result_label.setStyleSheet("font-size: 18px; color: #2ecc71; font-weight: bold; padding: 15px;")
+        self.genres_result_label.setWordWrap(True)
+        self.genres_result_label.hide()
+        layout.addWidget(self.genres_result_label)
+
+        # Radio buttony do fuzji multimedialnej
         self.late = QRadioButton("Late Fusion")
         self.early = QRadioButton("Early Fusion")
 
-        layout.addWidget(self.late,alignment=Qt.AlignHCenter)
-        layout.addWidget(self.early,alignment=Qt.AlignHCenter)
+        layout.addWidget(self.late, alignment=Qt.AlignHCenter)
+        layout.addWidget(self.early, alignment=Qt.AlignHCenter)
 
-        # =========================
-        # PRZYCISKI (OBOK SIEBIE)
-        # =========================
         buttons_layout = QHBoxLayout()
 
-        back_btn = QPushButton("Back")
-        predict_btn = QPushButton("Predict")
+        self.back_btn = QPushButton("Back")
+        self.predict_btn = QPushButton("Predict")
 
-        back_btn.setFixedHeight(35)
-        predict_btn.setFixedHeight(35)
+        self.back_btn.setFixedHeight(35)
+        self.predict_btn.setFixedHeight(35)
 
-        back_btn.clicked.connect(back_callback)
-        predict_btn.clicked.connect(self.predict)
+        # Inteligentna obsługa przycisku powrotu i akcji predykcji
+        self.back_btn.clicked.connect(self.handle_back)
+        self.predict_btn.clicked.connect(self.predict)
 
-        buttons_layout.addWidget(back_btn)
-        buttons_layout.addWidget(predict_btn)
+        buttons_layout.addWidget(self.back_btn)
+        buttons_layout.addWidget(self.predict_btn)
 
-        # =========================
-        # WYNIK (opcjonalnie lokalny)
-        # =========================
-        self.result = QLabel("")
-        self.result.setAlignment(Qt.AlignCenter)
-
-        # =========================
-        # SKŁADANIE
-        # =========================
         layout.addSpacing(10)
         layout.addLayout(buttons_layout)
-        layout.addSpacing(10)
-        layout.addWidget(self.result)
-
-        #layout.addStretch()
 
         container.setLayout(layout)
 
-        # wycentrowanie kontenera
         wrapper = QHBoxLayout()
         wrapper.addStretch()
         wrapper.addWidget(container)
@@ -98,100 +81,92 @@ class Step3(QWidget):
     def selected_sources_count(self):
         return sum(self.main.state.sources.values())
 
-    # =========================
-    # DANE
-    # =========================
     def load_data(self):
         data = self.main.state.data
 
         self.movie_title = data["title"]
         self.movie_description = data["description"]
         self.image_path = data["image_path"]
-        self.audio_video_path = data["audio_video_path"]
-
-        print("Title:", self.movie_title)
-        print("Description:", self.movie_description)
-        print("Image path:", self.image_path)
-        print("Audio-Video path:", self.audio_video_path)
 
         count = self.selected_sources_count()
 
+        # TRYB JEDNO-MODALNY (Sam tekst lub Sama grafika)
         if count <= 1:
-            self.title_label.setText("Ready for prediction")
+            self.showing_results = True
+            self.title_label.setText("Predicted Genres:")
             self.late.hide()
             self.early.hide()
+            self.predict_btn.hide()
+
+            genres = self.main.state.predict
+            if genres:
+                self.genres_result_label.setText(", ".join(genres))
+            else:
+                self.genres_result_label.setText("None (No matching genres)")
+
+            self.genres_result_label.show()
+            self.main.clear_output()
+
+        # TRYB MULTIMODALNY (Tekst + Grafika)
         else:
+            self.showing_results = False
             self.title_label.setText("Select multimodal method")
             self.late.show()
             self.early.show()
+            self.predict_btn.show()
+            self.genres_result_label.hide()
+            # Odznaczamy radio buttony przy świeżym wejściu, by zmusić do wyboru
+            self.late.setAutoExclusive(False)
+            self.early.setAutoExclusive(False)
+            self.late.setChecked(False)
+            self.early.setChecked(False)
+            self.late.setAutoExclusive(True)
+            self.early.setAutoExclusive(True)
 
-    # =========================
-    # PREDYKCJA
-    # =========================
-    def predict(self):
-        textFlag = False
-        imgFlag = False
-
+    def handle_back(self):
         count = self.selected_sources_count()
 
-        # TEXT
-        if len(self.movie_description) != 0:
-            textFlag = True
-            text = self.movie_title + " " + self.movie_description
-
-            text_vector = self.text_vectorizer.encode(text)
-            text_vector = text_vector.reshape(1, -1)
-            print(text_vector.shape)
-
-        # IMAGE
-        if len(self.image_path) != 0:
-            imgFlag = True
-            image_vector = self.image_vectorizer.encode(self.image_path)
-            image_vector = image_vector.reshape(1, -1)
-            print(image_vector.shape)
-
-        # SINGLE MODAL
-        if count <= 1:
-            self.main.state.method = "single"
-
-            if textFlag == True:
-                print("Text single-modal")
-
-
-            if imgFlag == True:
-                print("Image single-modal")
-
-
-        # MULTIMODAL
+        # Jeśli jesteśmy w trybie fuzji i aktualnie pokazujemy już wynik końcowy na środku...
+        if count > 1 and self.showing_results:
+            # ...to cofamy się tylko do wyboru metody fuzji (ponownie ładujemy ten krok)
+            self.load_data()
         else:
-            if self.late.isChecked():
-                self.main.state.method = "late"
-                print("Late multi-modal")
+            # W przeciwnym wypadku (tryb pojedynczy LUB tryb fuzji na etapie wyboru radio) – wracamy do Step 2
+            self.back_callback()
 
-            elif self.early.isChecked():
-                self.main.state.method = "early"
-                print("Early multi-modal")
-
-                if textFlag and imgFlag:
-                    early_features = np.concatenate(
-                        (text_vector, image_vector),
-                        axis=1
-                    )
-
-                    print(early_features.shape)
-            else:
-                self.main.show_error("Select multimodal method")
-                return
-
-        y_pred = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
-        self.display_predict_result(y_pred)
-
-    def display_predict_result(self,y_pred):
-        res = []
-        for idx, i in enumerate(y_pred):
-            if i == 1:
-                res.append(self.main.cat_list[idx])
-        if len(res) == 0:
-            self.main.show_result("Prediction: no results")
+    def predict(self):
+        if self.late.isChecked():
+            self.main.state.method = "late"
+            print("Late multi-modal selected (not implemented)")
+            # Wyświetlenie błędu o braku implementacji w dolnym pasku (Zadanie 2)
+            self.main.show_error("Late-fusion has not been implemented yet")
             return
-        self.main.show_result(f"Prediction: {', '.join(res)}")
+
+        elif self.early.isChecked():
+            self.main.state.method = "early"
+            print("Early multi-modal execution...")
+
+            try:
+                # Wykonanie prawdziwej predykcji z pliku .pkl
+                genres = self.main.run_real_prediction()
+                print(f"Wynik fuzji: {genres}")
+
+                # Zmieniamy widok interfejsu na centralną predykcję
+                self.showing_results = True
+                self.title_label.setText("Predicted Genres:")
+                self.late.hide()
+                self.early.hide()
+                self.predict_btn.hide()
+
+                if genres:
+                    self.genres_result_label.setText(", ".join(genres))
+                else:
+                    self.genres_result_label.setText("None (No matching genres)")
+
+                self.genres_result_label.show()
+                self.main.clear_output()  # Czyszczenie dolnego paska zgodnie z opisem
+
+            except Exception as e:
+                self.main.show_error(f"Prediction failed: {e}")
+        else:
+            self.main.show_error("Select multimodal method")

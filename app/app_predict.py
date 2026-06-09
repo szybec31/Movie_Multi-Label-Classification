@@ -4,12 +4,15 @@ import numpy as np
 import torch
 from baselines.features.resnet50 import extract_single as resnet50_extract_single
 from baselines.features.distilbert import extract_single as distilbert_extract_single, DistilBERTEmbedder
+from pathlib import Path
 
-FROZEN_DIR = "baselines/frozen_models"
+BASE_DIR = Path(__file__).resolve().parent.parent
+FROZEN_DIR = BASE_DIR / "frozen_models"
 MODEL_CONFIGS = {
-    "text": os.path.join(FROZEN_DIR, "text_tfidf_logistic.pkl"),
-    "graphics": os.path.join(FROZEN_DIR, "graphics_resnet50_logistic.pkl"),
-    "early-fusion": os.path.join(FROZEN_DIR, "early-fusion_tfidf_resnet50_logistic.pkl")
+    "text": FROZEN_DIR / "text_distilbert_logistic.pkl",
+    "graphics": FROZEN_DIR / "graphics_resnet50_logistic.pkl",
+    "early-fusion": FROZEN_DIR / "early-fusion_distilbert_resnet50_logistic.pkl",
+    "late-fusion": FROZEN_DIR / "early-fusion_distilbert_resnet50_logistic.pkl",
 }
 
 
