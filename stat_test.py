@@ -11,7 +11,7 @@ from scipy.stats import (
 # KONFIGURACJA
 # =========================================================
 
-CSV_PATH = "results.csv"
+CSV_PATH = "results_folds.csv"
 ALPHA = 0.05
 
 # Dostępne metryki:
@@ -272,32 +272,168 @@ def compare_models(
     return results
 
 
-# =========================================================
-# PRZYKŁAD UŻYCIA
-# =========================================================
+def build_comparison_table(
+    csv_path,
+    models,
+    metric="f1_samples",
+    alpha=0.05,
+    output_csv="pairwise_comparison.csv"
+):
+
+    df = load_results(csv_path)
+
+    names = list(models.keys())
+
+    wins = {n: 0 for n in names}
+    losses = {n: 0 for n in names}
+    equals = {n: 0 for n in names}
+
+    matrix = pd.DataFrame(
+        "-",
+        index=names,
+        columns=names
+    )
+
+    for i in range(len(names)):
+        for j in range(i + 1, len(names)):
+
+            name_a = names[i]
+            name_b = names[j]
+
+            result = compare_models(
+                csv_path=csv_path,
+                model_a=models[name_a],
+                model_b=models[name_b],
+                metric=metric
+            )
+
+            p_value = result["p_value"]
+
+            scores_a, scores_b = prepare_paired_samples(
+                select_model(df, models[name_a]),
+                select_model(df, models[name_b]),
+                metric
+            )
+
+            mean_a = scores_a.mean()
+            mean_b = scores_b.mean()
+
+            # ===================================
+            # Significant difference
+            # ===================================
+
+            if p_value < alpha:
+
+                if mean_a > mean_b:
+
+                    matrix.loc[name_a, name_b] = "↑"
+                    matrix.loc[name_b, name_a] = "↓"
+
+                    wins[name_a] += 1
+                    losses[name_b] += 1
+
+                else:
+
+                    matrix.loc[name_a, name_b] = "↓"
+                    matrix.loc[name_b, name_a] = "↑"
+
+                    wins[name_b] += 1
+                    losses[name_a] += 1
+
+            # ===================================
+            # No significant difference
+            # ===================================
+
+            else:
+
+                matrix.loc[name_a, name_b] = "="
+                matrix.loc[name_b, name_a] = "="
+
+                equals[name_a] += 1
+                equals[name_b] += 1
+
+    # ==========================================
+    # Add summary columns
+    # ==========================================
+
+    matrix["W"] = [wins[n] for n in names]
+    matrix["L"] = [losses[n] for n in names]
+    matrix["E"] = [equals[n] for n in names]
+    matrix["Score"] = matrix["W"] - matrix["L"]
+
+    # matrix = matrix.sort_values(
+    #     by=["Score", "W"],
+    #     ascending=False
+    # )
+
+    matrix.to_csv(output_csv)
+
+    print(f"\nSaved comparison table to: {output_csv}")
+
+    return matrix
+
+# ==========================================
+# MODEL NAMES FOR TABLE
+# ==========================================
+
+MODELS = {
+    "Text": {
+        "type": "text",
+        "experiment": "default",
+        "vectorizer1": "distilbert",
+        "model1": "mlp",
+        "vectorizer2": "none",
+        "model2": "none"
+    },
+    "Graphics": {
+        "type": "graphics",
+        "experiment": "default",
+        "vectorizer1": "resnet50",
+        "model1": "mlp",
+        "vectorizer2": "none",
+        "model2": "none"
+    },
+    "Early": {
+        "type": "early-fusion",
+        "experiment": "default",
+        "vectorizer1": "distilbert",
+        "model1": "mlp",
+        "vectorizer2": "resnet50",
+        "model2": "none"
+    },
+    "Late OR": {
+        "type": "late-fusion",
+        "experiment": "late-fusion-or",
+        "vectorizer1": "distilbert",
+        "model1": "mlp",
+        "vectorizer2": "resnet50",
+        "model2": "mlp"
+    },
+    "Late AND": {
+        "type": "late-fusion",
+        "experiment": "late-fusion-and",
+        "vectorizer1": "distilbert",
+        "model1": "mlp",
+        "vectorizer2": "resnet50",
+        "model2": "logistic"
+    },
+    "Late AVG": {
+        "type": "late-fusion",
+        "experiment": "late-fusion-avg",
+        "vectorizer1": "distilbert",
+        "model1": "mlp",
+        "vectorizer2": "resnet50",
+        "model2": "random_forest"
+    },
+}
 
 if __name__ == "__main__":
 
-    model_A = {
-        "type": "late-fusion",
-        "subtype": "late-fusion-or",
-        "vectorizer1": "distilbert",
-        "model1": "svm",
-        "vectorizer2": "resnet50",
-        "model2": "logistic"
-    }
-
-    model_B = {
-        "type": "graphics",
-        "vectorizer1": "resnet50",
-        "model1": "random_forest",
-        "vectorizer2": "none",
-        "model2": "none"
-    }
-
-    compare_models(
+    table = build_comparison_table(
         csv_path=CSV_PATH,
-        model_a=model_A,
-        model_b=model_B,
-        metric="f1_micro"
+        models=MODELS,
+        metric="f1_samples",
+        output_csv="f1_samples_pairwise.csv"
     )
+
+    print(table)
