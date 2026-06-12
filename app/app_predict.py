@@ -82,6 +82,7 @@ class MoviePredictor:
         else:
             X_input = features[0]
 
+        ''' 
         # 4. Predykcja prawdopodobieństw klas
         probabilities = self.model.predict_proba(X_input)
 
@@ -93,6 +94,17 @@ class MoviePredictor:
 
         # 5. Zastosowanie thresholdów do wektora binarnego (0 lub 1)
         binary_prediction = (prob_matrix >= self.threshold).astype(int)
+        '''
+
+        prob_matrix = self.predict_proba(
+            title=title,
+            overview=overview,
+            image_path=image_path
+        )
+
+        binary_prediction = (
+                prob_matrix >= self.threshold
+        ).astype(int)
 
         # 6. Dekodowanie za pomocą odzyskanego z pliku pkl MultiLabelBinarizer (LabelTransform.mlb)
         if self.mlb is not None:
@@ -100,3 +112,66 @@ class MoviePredictor:
             return list(predicted_genres[0])
 
         return binary_prediction.tolist()
+
+    @staticmethod
+    def late_fusion_predict(
+            text_predictor,
+            image_predictor,
+            title,
+            overview,
+            image_path
+    ):
+
+        text_probs = text_predictor.predict_proba(
+            title=title,
+            overview=overview
+        )
+
+        image_probs = image_predictor.predict_proba(
+            image_path=image_path
+        )
+
+        avg_probs = (text_probs + image_probs) / 2
+
+        binary_prediction = (
+                avg_probs >= text_predictor.threshold
+        ).astype(int)
+
+        predicted_genres = text_predictor.mlb.inverse_transform(
+            binary_prediction
+        )
+
+        return list(predicted_genres[0])
+
+
+
+    def predict_proba(self, title="", overview="", image_path=None):
+        features = []
+
+        if self.config["type"] in ["text", "early-fusion"]:
+            text_feat = self._get_text_features(title, overview)
+            features.append(text_feat)
+
+        if self.config["type"] in ["graphics", "early-fusion"]:
+            if not image_path or not os.path.exists(image_path):
+                raise ValueError(f"There is no such image under the path: {image_path}")
+
+            img_feat = self._get_image_features(image_path)
+            features.append(img_feat)
+
+        if self.config["type"] == "early-fusion":
+            X_input = np.hstack(features)
+        else:
+            X_input = features[0]
+
+        probabilities = self.model.predict_proba(X_input)
+
+        if isinstance(probabilities, list):
+            prob_matrix = np.array([
+                p[:, 1] if p.shape[1] > 1 else p[:, 0]
+                for p in probabilities
+            ]).T
+        else:
+            prob_matrix = probabilities
+
+        return prob_matrix
