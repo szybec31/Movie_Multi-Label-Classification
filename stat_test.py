@@ -432,8 +432,8 @@ if __name__ == "__main__":
     table = build_comparison_table(
         csv_path=CSV_PATH,
         models=MODELS,
-        metric="f1_samples",
-        output_csv="f1_samples_pairwise.csv"
+        metric="hamming",
+        output_csv="hamming_loss_pairwise.csv"
     )
 
     print(table)

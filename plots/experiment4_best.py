@@ -15,7 +15,6 @@ def plot_best_systems(
     """
 
     metrics = [
-        ("f1_micro", "F1-micro"),
         ("f1_samples", "F1-samples"),
         ("recall_micro", "Recall-micro"),
         ("hamming", "Hamming loss"),
@@ -44,7 +43,7 @@ def plot_best_systems(
         if subset.empty:
             continue
 
-        best_idx = subset[selection_metric].idxmax()
+        best_idx = subset[selection_metric].idxmax() if selection_metric != "hamming_mean" else subset[selection_metric].idxmin()
 
         row = subset.loc[best_idx].copy()
         row["plot_label"] = label

@@ -47,10 +47,16 @@ def plot_late_fusion_heatmap(
         + data["model2"].map(MODEL_NAMES)
     )
 
-    pivot = data.pivot(
+    pivot_mean = data.pivot(
+    index="combo",
+    columns="fusion",
+    values=f"{metric}_mean"
+)
+
+    pivot_std = data.pivot(
         index="combo",
         columns="fusion",
-        values=f"{metric}_mean"
+        values=f"{metric}_std"
     )
 
     row_order = [
@@ -65,20 +71,30 @@ def plot_late_fusion_heatmap(
         "MLP+MLP"
     ]
 
-    pivot = pivot.reindex(row_order)
-    pivot = pivot[fusion_order]
+    pivot_mean = pivot_mean.reindex(row_order)
+    pivot_mean = pivot_mean[fusion_order]
 
-    pivot.columns = [
-        fusion_names[c]
-        for c in pivot.columns
-    ]
+    pivot_std = pivot_std.reindex(row_order)
+    pivot_std = pivot_std[fusion_order]
 
-    plt.figure(figsize=(6, 6))
+    annot = pivot_mean.copy().astype(str)
+
+    for r in pivot_mean.index:
+        for c in pivot_mean.columns:
+
+            mean_val = pivot_mean.loc[r, c]
+            std_val = pivot_std.loc[r, c]
+
+            annot.loc[r, c] = (
+                f"{mean_val:.3f}\n({std_val:.3f})"
+            )
+            
+    plt.figure(figsize=(7, 6))
 
     sns.heatmap(
-        pivot,
-        annot=True,
-        fmt=".3f",
+        pivot_mean,
+        annot=annot,
+        fmt="",
         linewidths=0.5,
         cbar=True
     )
@@ -110,5 +126,5 @@ if __name__ == "__main__":
 
     plot_late_fusion_heatmap(
         df,
-        metric="hamming"
+        metric="avg_labels_pred"
     )

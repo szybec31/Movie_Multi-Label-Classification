@@ -25,7 +25,6 @@ def plot_models_for_type(
 
     if metrics is None:
         metrics = [
-            "f1_micro",
             "f1_samples",
             "recall_micro",
             "hamming"

@@ -1,0 +1,7 @@
+,Text,Graphics,Early,Late OR,Late AND,Late AVG,W,L,E,Score
+Text,-,↓,↑,↓,↑,↑,3,2,0,1
+Graphics,↑,-,↑,↓,↑,↑,4,1,0,3
+Early,↓,↓,-,↓,↑,↑,2,3,0,-1
+Late OR,↑,↑,↑,-,↑,↑,5,0,0,5
+Late AND,↓,↓,↓,↓,-,=,0,4,1,-4
+Late AVG,↓,↓,↓,↓,=,-,0,4,1,-4
