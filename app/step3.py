@@ -137,10 +137,28 @@ class Step3(QWidget):
     def predict(self):
         if self.late.isChecked():
             self.main.state.method = "late"
-            print("Late multi-modal selected (not implemented)")
-            # Wyświetlenie błędu o braku implementacji w dolnym pasku (Zadanie 2)
-            self.main.show_error("Late-fusion has not been implemented yet")
-            return
+
+            try:
+                genres = self.main.run_late_fusion_prediction()
+
+                self.showing_results = True
+                self.title_label.setText("Predicted Genres:")
+
+                self.late.hide()
+                self.early.hide()
+                self.predict_btn.hide()
+
+                if genres:
+                    self.genres_result_label.setText(", ".join(genres))
+                    print(f"Wynik fuzji: {genres}")
+                else:
+                    self.genres_result_label.setText("None (No matching genres)")
+
+                self.genres_result_label.show()
+                self.main.clear_output()
+
+            except Exception as e:
+                self.main.show_error(f"Prediction failed: {e}")
 
         elif self.early.isChecked():
             self.main.state.method = "early"

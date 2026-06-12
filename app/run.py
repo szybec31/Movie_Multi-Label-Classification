@@ -196,6 +196,19 @@ class MainWindow(QWidget):
             return self.predictor_graphics.predict(image_path=image_path)
         return []
 
+    def run_late_fusion_prediction(self):
+        title = self.state.data.get("title", "")
+        description = self.state.data.get("description", "")
+        image_path = self.state.data.get("image_path", "")
+
+        return MoviePredictor.late_fusion_predict(
+            self.predictor_text,
+            self.predictor_graphics,
+            title,
+            description,
+            image_path
+        )
+
     # =========================
     # OUTPUT
     # =========================
