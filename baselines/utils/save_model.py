@@ -52,6 +52,9 @@ def save_fold_results(
             "type": config.get("type"),
             "fold": fold,
             "fold_time": f"{fold_time:.3f}",
+            "scaler": config.get("scaler", False),
+            "pca": config.get("pca_text", None) or config.get("pca_graphics", None),
+            "pca_after_fusion": config.get("pca_after_fusion", False),
             "experiment": exp_name,
             "vectorizer1": config["vectorizers"][0] if len(config["vectorizers"]) > 0 else None,
             "vectorizer2": config["vectorizers"][1] if len(config["vectorizers"]) > 1 else None,
@@ -79,6 +82,9 @@ def save_all_results(
 ):
     row = {
         "type": config.get("type"),
+        "scaler": config.get("scaler", False),
+        "pca": config.get("pca_text", None) or config.get("pca_graphics", None),
+        "pca_after_fusion": config.get("pca_after_fusion", False),
         "experiment": exp_name,
         "vectorizer1": config["vectorizers"][0] if len(config["vectorizers"]) > 0 else None,
         "vectorizer2": config["vectorizers"][1] if len(config["vectorizers"]) > 1 else None,

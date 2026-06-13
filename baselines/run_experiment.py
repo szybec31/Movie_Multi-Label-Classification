@@ -7,6 +7,8 @@ from sklearn.metrics import f1_score, hamming_loss
 import numpy as np
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 from sklearn.model_selection import cross_val_predict
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 def run_experiment(df, y, split=None, **config):
@@ -91,6 +93,29 @@ def run_experiment(df, y, split=None, **config):
             config["balanced_list"] = [config["balanced"]]
         else:
             config["balanced_list"] = [False, False]
+
+    if "pca_text" not in config:
+        config["pca_text"] = None
+
+    if "pca_graphics" not in config:
+        config["pca_graphics"] = None
+
+    if "pca_after_fusion" not in config:
+        config["pca_after_fusion"] = None
+
+    if "pcas" not in config:
+        if config["type"] in ["text", "early-fusion", "late-fusion"]:
+            config["pcas"] = [
+                config["pca_text"],
+                config["pca_graphics"],
+                config["pca_after_fusion"]
+            ]
+        else:
+            config["pcas"] = [
+                config["pca_text"],
+                None,
+                None
+            ]
 
     ## LISTS:
     X_list = []
@@ -177,6 +202,24 @@ def run_experiment(df, y, split=None, **config):
 
         else:
             raise ValueError("Unknown vectorizer")
+        
+        
+        if config.get("scaler", False):
+            scaler = StandardScaler()
+            Xt = scaler.fit_transform(Xt)
+            Xv = scaler.transform(Xv)
+
+        
+        if config.get("pcas")[i] is not None and config["pca_after_fusion"] == None:
+            pca = PCA(
+                n_components=config.get("pcas")[i],
+                random_state=42
+            )
+
+            print(Xt.shape)
+            Xt = pca.fit_transform(Xt)
+            Xv = pca.transform(Xv)
+            print(Xt.shape)
 
         features_train.append(Xt)
         features_test.append(Xv)
@@ -193,6 +236,16 @@ def run_experiment(df, y, split=None, **config):
 
         features_train = [X_train_final]
         features_test = [X_test_final]
+
+        if config["pca_after_fusion"] is not None:
+            pca = PCA(
+                n_components=config.get("pcas")[2],
+                random_state=42
+            )
+
+            features_train = [pca.fit_transform(X_train_final)]
+            features_test = [pca.transform(X_test_final)]
+
 
     # ========================
     # MODELS AND PREDICTIONS
