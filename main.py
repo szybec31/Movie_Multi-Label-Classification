@@ -4,7 +4,7 @@ from label_transform import LabelTransform
 from baselines.run_cv import run_cv
 # from baselines.utils.save_model import save_model_info
 # from baselines.grid_search import run_grid_search
-# from baselines.freeze_models import freeze_model
+from baselines.freeze_models import freeze_model
 # from baselines.utils.test_configs import freeze_configs
 from params.models import get_model_name
 from params.vectorizers import get_vectorizer_name
@@ -47,6 +47,28 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
 
     df, lt, _ = load()
     y = lt.preprocessing()
+
+    if type == "freeze":
+        params = [{
+            #depend on choosen model
+            # for text, graphics, early-fusion, and also for text in late-fusion
+        },
+        {  
+            # for graphics in late-fuison
+        }]
+        config = {
+            "type": "text",
+            "vectorizers": [],
+            "models": [],
+            "balanced_list": [True, True],
+            "threshold": 0.5,
+            "params": params
+        }
+
+        freeze_model(
+            df, y, config, mlb=None
+        )
+        return
 
     models = get_model_name[type]
     vectorizers = get_vectorizer_name[type]
@@ -92,6 +114,8 @@ def main(type: str = "text", use_threshold_grid: bool = True, use_model_grid: bo
                     results = run_cv(df, y, **config)
 
 if __name__ == "__main__":
+    #main("freeze")
+    
     type = "text"    # "graphics", "late-fusion", "text", "early-fusion" or "info" # freeze - soon return
     main(
         type = type,

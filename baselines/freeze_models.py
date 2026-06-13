@@ -17,7 +17,7 @@ def ensure_dir():
     os.makedirs(SAVE_DIR, exist_ok=True)
 
 
-def train_single_model(X, y, model_name, config, idx=0):
+def train_single_model(X, y, model_name, idx=0, **config):
     balanced = config.get("balanced", False)
     if "balanced_list" in config:
         balanced = config["balanced_list"][idx]
@@ -98,7 +98,7 @@ def get_base_filename(config):
     )
 
 
-def freeze_model(df, y, config, mlb=None):
+def freeze_model(df, y, config, mlb=None, params: list[dict] | None = None):
     print("FREEZING MODEL")
     print(config)
 
@@ -107,13 +107,18 @@ def freeze_model(df, y, config, mlb=None):
 
     base_name = get_base_filename(config)
 
+    if params == None:
+        params = [{}, {}]
+        
+
     if config["type"] in ["text", "graphics"]:
         X = features[0]
         model = train_single_model(
             X,
             y,
             config["models"][0],
-            config
+            **config,
+            **params[0]
         )
 
         save_data = {
@@ -135,7 +140,8 @@ def freeze_model(df, y, config, mlb=None):
             X,
             y,
             config["models"][0],
-            config
+            **config,
+            **params[0]
         )
 
         save_data = {
@@ -158,8 +164,9 @@ def freeze_model(df, y, config, mlb=None):
                 features[i],
                 y,
                 config["models"][i],
-                config,
                 idx=i
+                **config,
+                **params[i]
             )
             models.append(model)
 
