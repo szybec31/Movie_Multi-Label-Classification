@@ -9,7 +9,9 @@ sns.set_theme(style="whitegrid")
 def plot_models_for_type(
     df,
     exp_type="text",
-    metrics=None
+    metrics=None,
+    pca = 0.95,
+    scaler = True,
 ):
     """
     One plot for:
@@ -42,18 +44,32 @@ def plot_models_for_type(
     }
 
     models = [
-        m for m in ["logistic", "random_forest", "mlp"]
+        m for m in ["logistic", "logistic", "random_forest", "random_forest", "mlp", "mlp"]
         if m in data["model1"].values
     ]
 
     x = np.arange(len(metrics))
-    width = 0.25
+    width = 0.1
 
     plt.figure(figsize=(10, 6))
 
     for i, model in enumerate(models):
 
-        subset = data[data["model1"] == model]
+        if i % 2 == 0:
+            var = (
+                (data["model1"] == model)
+                & (data["pca"] != pca)
+                & (data["scaler"] != scaler)
+            )
+            
+        else:
+            var = (
+                (data["model1"] == model)
+                & (data["pca"] == pca)
+                & (data["scaler"] == scaler)
+            )
+
+        subset = data[var]
 
         means = [
             subset[f"{metric}_mean"].iloc[0]
@@ -98,8 +114,8 @@ if __name__ == "__main__":
 
     df = pd.read_csv("results_mean.csv")
 
-    plot_models_for_type(df, "text")
+    plot_models_for_type(df, "text", pca=0.95, scaler=True)
 
-    plot_models_for_type(df, "graphics")
+    plot_models_for_type(df, "graphics", pca=0.95, scaler=True)
 
-    plot_models_for_type(df, "early-fusion")
+    plot_models_for_type(df, "early-fusion", pca=0.95, scaler=True)

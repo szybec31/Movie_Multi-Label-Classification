@@ -24,7 +24,8 @@ def plot_late_fusion_heatmap(
     """
 
     data = df[
-        df["type"] == "late-fusion"
+        (df["pca"] != 0.95) &
+        (df["type"] == "late-fusion")
     ].copy()
 
     fusion_order = [

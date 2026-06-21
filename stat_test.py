@@ -34,6 +34,7 @@ def load_results(csv_path: str) -> pd.DataFrame:
     # Ujednolicenie wartości None/NaN
     df["vectorizer2"] = df["vectorizer2"].fillna("none")
     df["model2"] = df["model2"].fillna("none")
+    df["pca"] = df["pca"].fillna("none")
 
     return df
 
@@ -128,7 +129,7 @@ def run_statistical_test(
 
     normality = check_normality(scores_a, scores_b)
 
-    if normality["normal"]:
+    if True or normality["normal"]:
 
         test_name = "Paired t-test"
 
@@ -244,10 +245,10 @@ def compare_models(
     df_b = select_model(df, model_b)
 
     if df_a.empty:
-        raise ValueError("Nie znaleziono Modelu A")
+        raise ValueError(f"Nie znaleziono Modelu {model_a}")
 
     if df_b.empty:
-        raise ValueError("Nie znaleziono Modelu B")
+        raise ValueError(f"Nie znaleziono Modelu {model_b}")
 
     scores_a, scores_b = prepare_paired_samples(
         df_a,
@@ -326,16 +327,16 @@ def build_comparison_table(
 
                 if mean_a > mean_b:
 
-                    matrix.loc[name_a, name_b] = "↑"
-                    matrix.loc[name_b, name_a] = "↓"
+                    matrix.loc[name_a, name_b] = f"↑ ({p_value:.3f})"
+                    matrix.loc[name_b, name_a] = f"↓ ({p_value:.3f})"
 
                     wins[name_a] += 1
                     losses[name_b] += 1
 
                 else:
 
-                    matrix.loc[name_a, name_b] = "↓"
-                    matrix.loc[name_b, name_a] = "↑"
+                    matrix.loc[name_a, name_b] = f"↓ ({p_value:.3f})"
+                    matrix.loc[name_b, name_a] = f"↑ ({p_value:.3f})"
 
                     wins[name_b] += 1
                     losses[name_a] += 1
@@ -346,8 +347,8 @@ def build_comparison_table(
 
             else:
 
-                matrix.loc[name_a, name_b] = "="
-                matrix.loc[name_b, name_a] = "="
+                matrix.loc[name_a, name_b] = f"= ({p_value:.3f})"
+                matrix.loc[name_b, name_a] = f"= ({p_value:.3f})"
 
                 equals[name_a] += 1
                 equals[name_b] += 1
@@ -383,7 +384,8 @@ MODELS = {
         "vectorizer1": "distilbert",
         "model1": "mlp",
         "vectorizer2": "none",
-        "model2": "none"
+        "model2": "none",
+        "pca": "none"
     },
     "Graphics": {
         "type": "graphics",
@@ -391,7 +393,8 @@ MODELS = {
         "vectorizer1": "resnet50",
         "model1": "mlp",
         "vectorizer2": "none",
-        "model2": "none"
+        "model2": "none",
+        "pca": "none",
     },
     "Early": {
         "type": "early-fusion",
@@ -399,7 +402,8 @@ MODELS = {
         "vectorizer1": "distilbert",
         "model1": "mlp",
         "vectorizer2": "resnet50",
-        "model2": "none"
+        "model2": "none",
+        "pca": "none",
     },
     "Late OR": {
         "type": "late-fusion",
@@ -407,7 +411,8 @@ MODELS = {
         "vectorizer1": "distilbert",
         "model1": "mlp",
         "vectorizer2": "resnet50",
-        "model2": "mlp"
+        "model2": "mlp",
+        "pca": 0.95,
     },
     "Late AND": {
         "type": "late-fusion",
@@ -415,7 +420,8 @@ MODELS = {
         "vectorizer1": "distilbert",
         "model1": "mlp",
         "vectorizer2": "resnet50",
-        "model2": "logistic"
+        "model2": "logistic",
+        "pca": "none",
     },
     "Late AVG": {
         "type": "late-fusion",
@@ -423,7 +429,8 @@ MODELS = {
         "vectorizer1": "distilbert",
         "model1": "mlp",
         "vectorizer2": "resnet50",
-        "model2": "random_forest"
+        "model2": "random_forest",
+        "pca": "none",
     },
 }
 
@@ -432,8 +439,8 @@ if __name__ == "__main__":
     table = build_comparison_table(
         csv_path=CSV_PATH,
         models=MODELS,
-        metric="hamming",
-        output_csv="hamming_loss_pairwise.csv"
+        metric="f1_samples",
+        output_csv="f1_samples_pairwise.csv"
     )
 
     print(table)

@@ -46,7 +46,7 @@ def plot_best_systems(
         best_idx = subset[selection_metric].idxmax() if selection_metric != "hamming_mean" else subset[selection_metric].idxmin()
 
         row = subset.loc[best_idx].copy()
-        row["plot_label"] = label
+        row["plot_label"] = f"{label}{"-PCA" if row["pca"] == 0.95 else ""}"
 
         selected_rows.append(row)
 
